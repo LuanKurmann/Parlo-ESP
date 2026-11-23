@@ -53,6 +53,7 @@ ShotDistance App::lastShotDistance() const {
 // ---------- Knoepfe ----------
 
 void App::button1Short() {
+    input_count_++;
     switch (overlay_) {
         case Overlay::None: addShot(); break;
         case Overlay::ClubPicker: confirmClub(suggested_); break;
@@ -63,6 +64,7 @@ void App::button1Short() {
 }
 
 void App::button1Long() {
+    input_count_++;
     switch (overlay_) {
         case Overlay::None:
         case Overlay::ClubPicker: undo(); break;
@@ -73,6 +75,7 @@ void App::button1Long() {
 }
 
 void App::button2Short() {
+    input_count_++;
     switch (overlay_) {
         case Overlay::None: finishHole(); break;
         case Overlay::ClubPicker: suggested_ = nextClub(suggested_); break;
@@ -83,6 +86,7 @@ void App::button2Short() {
 }
 
 void App::button2Long() {
+    input_count_++;
     if (overlay_ == Overlay::None) {
         overlay_ = Overlay::Menu;
         menu_ = MenuItem::MarkGreen;
@@ -94,22 +98,26 @@ void App::button2Long() {
 // ---------- Touch ----------
 
 void App::swipe(int direction) {
+    input_count_++;
     if (overlay_ != Overlay::None || direction == 0) return;
     const int step = direction > 0 ? 1 : kViewCount - 1;
     view_ = static_cast<View>((static_cast<int>(view_) + step) % kViewCount);
 }
 
 void App::selectClub(Club club) {
+    input_count_++;
     if (overlay_ != Overlay::ClubPicker || static_cast<int>(club) >= kClubCount) return;
     confirmClub(club);
 }
 
 void App::selectMenuItem(MenuItem item) {
+    input_count_++;
     if (overlay_ != Overlay::Menu || static_cast<int>(item) >= kMenuItemCount) return;
     runMenuItem(item);
 }
 
 void App::tap() {
+    input_count_++;
     if (overlay_ == Overlay::HoleDone) nextHole();
 }
 

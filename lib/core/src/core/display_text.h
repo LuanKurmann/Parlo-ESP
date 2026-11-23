@@ -19,4 +19,81 @@ struct DistanceScreenText {
 
 DistanceScreenText distanceScreenText(const App& app);
 
+// Faerbung eines Ergebnisses: unter Par, Par (oder unbekannt), ueber Par,
+// oder noch kein Ergebnis.
+enum class ScoreTone : uint8_t { None, Under, Par, Over };
+
+// ---------- Ansicht "Schlaege" ----------
+
+struct ShotRowText {
+    char number[12];   // "1"
+    char club[20];     // "Eisen 7", "–" solange keiner gewaehlt ist
+    char distance[12]; // "218 m", "Putt" oder leer
+};
+
+struct ShotsScreenText {
+    char title[24]; // "LOCH 7"
+    int count;
+    ShotRowText rows[kMaxShotsPerHole];
+};
+
+ShotsScreenText shotsScreenText(const App& app);
+
+// ---------- Ansicht "Scorecard" ----------
+
+struct ScoreCellText {
+    char hole[12]; // "7"
+    char score[12]; // "5", "–" ohne Schlag
+    ScoreTone tone;
+    bool current;  // das Loch, auf dem man gerade steht
+};
+
+struct ScorecardText {
+    char subtitle[32]; // "6 Löcher gespielt"
+    int hole_count;
+    ScoreCellText cells[kMaxHoles];
+    char strokes[20];  // "27 Schläge"
+    char to_par[8];    // "+4", "E", "-2", "–" ohne Par
+    ScoreTone to_par_tone;
+    char putts[16];    // "11 Putts"
+};
+
+ScorecardText scorecardText(const App& app);
+
+// ---------- Overlays ----------
+
+struct ClubPickerText {
+    char subtitle[40]; // "Noch 269 m bis Grünmitte" oder leer
+    char hint[40];     // "Driver vorgeschlagen"
+    int suggested;     // Index des markierten Schlaegers
+};
+
+ClubPickerText clubPickerText(const App& app);
+
+const char* menuItemText(MenuItem item);
+
+struct HoleDoneText {
+    char caption[48]; // "LOCH 7 · PAR 5"
+    char strokes[12];
+    char name[16];    // "Bogey", leer ohne Par
+    ScoreTone tone;
+    char putts[16];   // "2 Putts"
+    char hint[48];    // "Knopf drücken für Loch 8"
+};
+
+HoleDoneText holeDoneText(const App& app);
+
+struct RoundSummaryText {
+    char strokes[12];
+    char line[40];   // "+4 nach 6 Löchern"
+    ScoreTone tone;
+    char detail[48]; // "11 Putts · längster Schlag 244 m"
+    char hint[48];
+};
+
+RoundSummaryText roundSummaryText(const App& app);
+
+// Text einer Rueckmeldung, leer fuer Message::None.
+const char* messageText(Message message);
+
 } // namespace golf

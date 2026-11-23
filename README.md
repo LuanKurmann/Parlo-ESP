@@ -38,6 +38,8 @@ Runde liegen im Ordner `sim_data` und bleiben zwischen den Starts erhalten.
 | Taste | Wirkung |
 |---|---|
 | `1`, `2` | Knopf 1 und Knopf 2, kurz tippen oder lang halten |
+| Maus | Touch: tippen und wischen |
+| Pfeil links / rechts | Ansicht wechseln (wie Wischen) |
 | Pfeil hoch / ab | auf der Bahn Richtung Grün bzw. zurück gehen |
 | `G` | GPS-Empfang aus- und einschalten |
 | `S` | Screenshot nach `screenshot.bmp` |
@@ -50,10 +52,13 @@ Ohne Fenster lässt er sich mit Befehlen steuern, zum Beispiel für Screenshots:
 
 `b1`/`b2` drücken einen Knopf kurz, `B1`/`B2` lang, `pos:218` stellt den
 Spieler 218 m hinter den Abschlag, `gps:off`/`gps:on` schaltet den Empfang.
+`click:233:300` tippt das Display an, `swipe:left`/`swipe:right` wischt,
+`wait:2000` wartet zwei Sekunden.
 
 ## Stand
 
-Schritt 6 von 13: Der Kern ist fertig und speichert sicher gegen Stromausfall.
-Der Simulator zeigt die Distanz-Ansicht; die weiteren Ansichten folgen.
+Schritt 7 von 13: Der Kern ist fertig und speichert sicher gegen Stromausfall.
+Der Simulator zeigt alle Ansichten (Distanz, Schläge, Scorecard) samt
+Schlägerwahl, Menü, Loch- und Rundenübersicht, bedienbar über Knöpfe und Touch.
 Der Display-Treiber für das Gerät fehlt noch; die Firmware zeichnet vorerst
 in einen Platzhalter-Puffer.

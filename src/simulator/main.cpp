@@ -3,6 +3,8 @@
 //
 // Tasten im Fenster:
 //   1, 2            Knopf 1 und Knopf 2 (kurz tippen oder lang halten)
+//   Maus            Touch: tippen und wischen
+//   Pfeil links/rechts  Ansicht wechseln (wie Wischen)
 //   Pfeil hoch/ab   auf der Bahn Richtung Gruen bzw. zurueck gehen
 //   G               GPS-Empfang aus/ein
 //   S               Screenshot nach screenshot.bmp
@@ -17,6 +19,9 @@
 //                 b1 b2        Knopf kurz        B1 B2   Knopf lang
 //                 pos:218      218 m vom Abschlag entfernt stehen
 //                 gps:off / gps:on
+//                 click:233:300    Display an der Stelle x:y antippen
+//                 swipe:left / swipe:right   ueber das Display wischen
+//                 wait:2000        2 Sekunden warten (z. B. bis eine Einblendung weg ist)
 //                 shot:datei.bmp   Screenshot speichern
 //
 // Beispiel: program --headless --do "b1,b1,pos:218,shot:distanz.bmp"
@@ -41,9 +46,61 @@
 
 namespace {
 
+// Laesst LVGL `ms` Millisekunden lang arbeiten (Eingaben, Timer, Zeichnen).
+void pump(uint32_t ms) {
+    const uint32_t end = SDL_GetTicks() + ms;
+    do {
+        lv_timer_handler();
+        SDL_Delay(5);
+    } while (SDL_GetTicks() < end);
+}
+
+// Zeiger fuer Beruehrungen aus Befehlen (--do), unabhaengig von der Maus.
+struct ScriptPointer {
+    int x = 0, y = 0;
+    bool pressed = false;
+
+    static void read(lv_indev_t* indev, lv_indev_data_t* data) {
+        const ScriptPointer* self = static_cast<const ScriptPointer*>(lv_indev_get_user_data(indev));
+        data->point.x = self->x;
+        data->point.y = self->y;
+        data->state = self->pressed ? LV_INDEV_STATE_PRESSED : LV_INDEV_STATE_RELEASED;
+    }
+
+    void attach() {
+        lv_indev_t* indev = lv_indev_create();
+        lv_indev_set_type(indev, LV_INDEV_TYPE_POINTER);
+        lv_indev_set_user_data(indev, this);
+        lv_indev_set_read_cb(indev, read);
+    }
+
+    void click(int px, int py) {
+        x = px;
+        y = py;
+        pressed = true;
+        pump(80);
+        pressed = false;
+        pump(80);
+    }
+
+    void swipe(int direction) { // +1 = nach rechts, -1 = nach links
+        x = 233 - direction * 100;
+        y = 233;
+        pressed = true;
+        pump(40);
+        for (int step = 0; step < 6; step++) {
+            x += direction * 35;
+            pump(35);
+        }
+        pressed = false;
+        pump(80);
+    }
+};
+
 struct Simulator {
     std::unique_ptr<golf::PosixFileSystem> fs;
     std::unique_ptr<golf::Session> session;
+    ScriptPointer pointer;
     double progress_m = 0.0; // Entfernung vom Abschlag auf der Bahn
     bool gps_on = true;
     int hole = -1;
@@ -80,6 +137,20 @@ struct Simulator {
             gps_on = true;
         } else if (command.compare(0, 4, "pos:") == 0) {
             progress_m = std::atof(command.c_str() + 4);
+        } else if (command.compare(0, 6, "click:") == 0) {
+            int px = 0, py = 0;
+            if (std::sscanf(command.c_str() + 6, "%d:%d", &px, &py) != 2) return false;
+            apply();
+            pointer.click(px, py);
+        } else if (command == "swipe:left") {
+            apply();
+            pointer.swipe(-1);
+        } else if (command == "swipe:right") {
+            apply();
+            pointer.swipe(1);
+        } else if (command.compare(0, 5, "wait:") == 0) {
+            apply();
+            pump(static_cast<uint32_t>(std::atoi(command.c_str() + 5)));
         } else if (command.compare(0, 5, "shot:") == 0) {
             apply();
             lv_timer_handler();
@@ -177,6 +248,7 @@ int main(int argc, char** argv) {
     simulator.session.reset(new golf::Session(*simulator.fs));
 
     golf::ui::init(simulator.app());
+    simulator.pointer.attach();
     if (!headless) addRoundBezel();
     simulator.apply();
 
@@ -187,7 +259,7 @@ int main(int argc, char** argv) {
     }
 
     golf::Button button1, button2;
-    bool g_down = false, s_down = false;
+    bool g_down = false, s_down = false, left_down = false, right_down = false;
     for (;;) {
         lv_timer_handler(); // verarbeitet auch die SDL-Ereignisse (Fenster schliessen)
         const Uint8* keys = SDL_GetKeyboardState(nullptr);
@@ -199,6 +271,8 @@ int main(int argc, char** argv) {
         if (keys[SDL_SCANCODE_UP]) simulator.progress_m += 0.4;
         if (keys[SDL_SCANCODE_DOWN]) simulator.progress_m -= 0.4;
         if (simulator.progress_m < -50.0) simulator.progress_m = -50.0;
+        if (pressedNow(keys, SDL_SCANCODE_LEFT, left_down)) simulator.app().swipe(-1);
+        if (pressedNow(keys, SDL_SCANCODE_RIGHT, right_down)) simulator.app().swipe(1);
         if (pressedNow(keys, SDL_SCANCODE_G, g_down)) simulator.gps_on = !simulator.gps_on;
         if (pressedNow(keys, SDL_SCANCODE_S, s_down)) sim::saveScreenshot("screenshot.bmp");
 

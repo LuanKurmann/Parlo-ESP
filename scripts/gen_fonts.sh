@@ -25,10 +25,13 @@ gen() { # Name, Datei, Groesse, weitere Argumente
         --lv-include lvgl.h --lv-font-name "$name" -o "$out/$name.c"
 }
 
+gen golf_font_text_16 "$text500" 16 -r 0x20-0x7E --symbols "$extra"
 gen golf_font_text_20 "$text500" 20 -r 0x20-0x7E --symbols "$extra"
 gen golf_font_text_26 "$text500" 26 -r 0x20-0x7E --symbols "$extra"
 gen golf_font_cap_22  "$text600" 22 -r 0x20-0x7E --symbols "$extra"
+gen golf_font_num_30  "$cond600" 30 -r 0x20-0x7E --symbols "$extra"
 gen golf_font_num_40  "$cond600" 40 -r 0x20-0x7E --symbols "$extra"
+gen golf_font_num_100 "$cond600" 100 --symbols "0123456789-"
 gen golf_font_num_154 "$cond600" 154 --symbols "0123456789-"
 
 rm -rf "$work"

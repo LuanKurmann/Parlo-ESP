@@ -89,6 +89,10 @@ public:
 
     // Zaehlt hoch, sobald eine neue Runde begonnen wird. Die Runde davor
     // bleibt in previousRound() erhalten, bis die naechste beginnt.
+    // Zaehlt jede Eingabe (Knopf oder Touch). Aendert er sich nicht, hat sich
+    // auch nichts zu Speicherndes geaendert.
+    uint32_t inputCount() const { return input_count_; }
+
     uint32_t roundNumber() const { return round_number_; }
     const Round& previousRound() const { return previous_round_; }
     const Course& course() const { return course_; }
@@ -108,6 +112,7 @@ private:
     Round round_;
     Round previous_round_;
     uint32_t round_number_ = 0;
+    uint32_t input_count_ = 0;
     int hole_ = 0;
     View view_ = View::Distance;
     Overlay overlay_ = Overlay::None;

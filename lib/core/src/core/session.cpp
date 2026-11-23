@@ -43,6 +43,10 @@ Session::Session(FileSystem& fs) : store_(fs), app_(loadCourseOrEmpty(store_)) {
 }
 
 bool Session::sync() {
+    if (!pending_ && last_sync_ok_ && app_.inputCount() == seen_input_count_) return true;
+    pending_ = false;
+    seen_input_count_ = app_.inputCount();
+
     bool ok = true;
 
     if (app_.roundNumber() != seen_round_number_) {

@@ -36,8 +36,9 @@ jobs:
 
       - name: Simulator starten (ohne Bildschirm)
         run: |
-          .pio/build/simulator/program --headless --do "b1,b1,pos:218,shot:distanz.bmp"
+          .pio/build/simulator/program --headless --do "b1,click:240:180,pos:218,shot:distanz.bmp,swipe:left,shot:schlaege.bmp,b2,click:233:233,B2,b1"
           test -s distanz.bmp
+          test -s schlaege.bmp
 
       - name: Firmware bauen
         run: pio run -e device

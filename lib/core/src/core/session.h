@@ -22,10 +22,14 @@ public:
     Store& store() { return store_; }
 
     // Aktuelle Zeit vom GPS; wird als Startzeit der Runde vermerkt.
-    void setDateTime(const DateTime& now) { now_ = now; }
+    void setDateTime(const DateTime& now) {
+        now_ = now;
+        if (now.valid && !started_.valid) pending_ = true;
+    }
     const DateTime& roundStarted() const { return started_; }
 
-    // Nach jeder Eingabe aufrufen. Speichert, was sich geaendert hat, und legt
+    // Regelmaessig aufrufen (darf in jedem Durchlauf der Hauptschleife sein;
+    // ohne neue Eingabe kostet es nichts). Speichert, was sich geaendert hat, und legt
     // eine beendete Runde ins Archiv. false, wenn etwas nicht gespeichert
     // werden konnte; es wird beim naechsten Aufruf erneut versucht.
     bool sync();
@@ -47,6 +51,8 @@ private:
     uint32_t round_crc_ = 0;
     uint32_t course_crc_ = 0;
     bool last_sync_ok_ = true;
+    bool pending_ = true;            // beim ersten Aufruf immer pruefen
+    uint32_t seen_input_count_ = 0;
 };
 
 } // namespace golf
