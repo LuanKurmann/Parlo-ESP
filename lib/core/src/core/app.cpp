@@ -6,8 +6,24 @@ namespace {
 int clampHoleCount(int n) { return n < 1 ? 1 : (n > kMaxHoles ? kMaxHoles : n); }
 } // namespace
 
-App::App(const Course& course, const Bag& bag) : course_(course), bag_(bag), round_(clampHoleCount(course.hole_count)) {
+App::App(const Course& course, const Bag& bag)
+    : course_(course), bag_(bag), round_(clampHoleCount(course.hole_count)), previous_round_(round_.holeCount()) {
     course_.hole_count = round_.holeCount();
+}
+
+bool App::restoreRound(const Round& round, int hole) {
+    if (round.holeCount() != round_.holeCount() || hole < 0 || hole >= round.holeCount()) return false;
+    round_ = round;
+    hole_ = hole;
+    view_ = View::Distance;
+    overlay_ = Overlay::None;
+    // Wurde mitten in der Schlaegerwahl ausgeschaltet, geht es dort weiter.
+    const int count = round_.shotCount(hole_);
+    if (count > 0 && round_.shot(hole_, count - 1)->club == Club::None) {
+        suggested_ = suggestClub(bag_, kDistanceUnknown, count == 1, course_.holes[hole_].par);
+        overlay_ = Overlay::ClubPicker;
+    }
+    return true;
 }
 
 void App::setPosition(const LatLon& position) {
@@ -163,6 +179,8 @@ void App::runMenuItem(MenuItem item) {
 }
 
 void App::newRound() {
+    previous_round_ = round_;
+    round_number_++;
     round_ = Round(course_.hole_count);
     hole_ = 0;
     view_ = View::Distance;

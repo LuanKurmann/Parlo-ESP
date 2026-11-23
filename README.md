@@ -32,5 +32,5 @@ Bei jedem Push laufen Tests, Simulator-Build und Firmware-Build automatisch
 
 ## Stand
 
-Schritt 4 von 13: Der Kern ist fertig (Distanzen, GPS-Daten, Rundenmodell, Knopf-Logik und Ablaufsteuerung). Der Display-Treiber für das Gerät fehlt noch;
+Schritt 5 von 13: Der Kern ist fertig (Distanzen, GPS-Daten, Rundenmodell, Knopf-Logik, Ablaufsteuerung) und speichert Platz und Runden sicher gegen Stromausfall. Der Display-Treiber für das Gerät fehlt noch;
 die Firmware zeichnet vorerst in einen Platzhalter-Puffer.

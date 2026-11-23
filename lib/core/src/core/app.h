@@ -80,6 +80,17 @@ public:
     ShotDistance lastShotDistance() const;
 
     const Round& round() const { return round_; }
+
+    // ---------- Fuer das Speichern ----------
+
+    // Setzt eine gespeicherte Runde fort (nach einem Neustart). Passt die Runde
+    // nicht zum Platz, bleibt die App unveraendert und es kommt false zurueck.
+    bool restoreRound(const Round& round, int hole);
+
+    // Zaehlt hoch, sobald eine neue Runde begonnen wird. Die Runde davor
+    // bleibt in previousRound() erhalten, bis die naechste beginnt.
+    uint32_t roundNumber() const { return round_number_; }
+    const Round& previousRound() const { return previous_round_; }
     const Course& course() const { return course_; }
     const Bag& bag() const { return bag_; }
 
@@ -95,6 +106,8 @@ private:
     Course course_;
     Bag bag_;
     Round round_;
+    Round previous_round_;
+    uint32_t round_number_ = 0;
     int hole_ = 0;
     View view_ = View::Distance;
     Overlay overlay_ = Overlay::None;
