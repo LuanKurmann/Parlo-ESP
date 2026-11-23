@@ -1,0 +1,6 @@
+Die Schriftdateien in diesem Ordner wurden mit lv_font_conv aus Barlow und
+Barlow Condensed erzeugt (siehe scripts/gen_fonts.sh).
+
+Barlow und Barlow Condensed: Copyright 2017 The Barlow Project Authors
+(https://github.com/jpt/barlow), lizenziert unter der SIL Open Font License,
+Version 1.1: https://openfontlicense.org

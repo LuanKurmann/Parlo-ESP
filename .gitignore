@@ -1,3 +1,5 @@
 .pio/
 .vscode/
 *.o
+sim_data/
+screenshot.bmp

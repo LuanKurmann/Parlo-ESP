@@ -1,6 +1,6 @@
 // Firmware-Einstieg fuer das Geraet.
 //
-// Stand Schritt 1: Die Oberflaeche wird in einen Platzhalter-Puffer gezeichnet,
+// Stand: Die Oberflaeche wird in einen Platzhalter-Puffer gezeichnet,
 // der noch nirgends angezeigt wird. Der echte AMOLED-Treiber folgt, sobald das
 // Board da ist (Schritt 11/12).
 
@@ -11,6 +11,9 @@
 #include "ui/ui.h"
 
 namespace {
+
+// Die App ist gross; statisch anlegen, nicht auf dem Stack.
+golf::App app;
 
 constexpr int kBufferLines = 40;
 uint8_t* draw_buffer = nullptr;
@@ -36,7 +39,7 @@ void setup() {
     lv_display_set_flush_cb(display, flush_placeholder);
     lv_display_set_buffers(display, draw_buffer, nullptr, buffer_bytes, LV_DISPLAY_RENDER_MODE_PARTIAL);
 
-    golf::ui::init();
+    golf::ui::init(app);
 }
 
 void loop() {

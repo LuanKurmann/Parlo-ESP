@@ -35,7 +35,9 @@ jobs:
         run: pio run -e simulator
 
       - name: Simulator starten (ohne Bildschirm)
-        run: SDL_VIDEODRIVER=dummy .pio/build/simulator/program --smoke
+        run: |
+          .pio/build/simulator/program --headless --do "b1,b1,pos:218,shot:distanz.bmp"
+          test -s distanz.bmp
 
       - name: Firmware bauen
         run: pio run -e device

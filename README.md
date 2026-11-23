@@ -22,7 +22,7 @@ Voraussetzung: [PlatformIO](https://platformio.org/install/cli) und SDL2
 pio test -e native                       # Unit-Tests auf dem PC
 pio test -e native_sanitize              # dieselben Tests mit Speicherfehler-Erkennung
 pio run -e simulator                     # Simulator bauen
-.pio/build/simulator/program             # Simulator starten
+.pio/build/simulator/program             # Simulator starten (Tasten siehe unten)
 pio run -e device                        # Firmware bauen
 pio run -e device -t upload              # Firmware aufs Gerät laden
 ```
@@ -30,7 +30,30 @@ pio run -e device -t upload              # Firmware aufs Gerät laden
 Bei jedem Push laufen Tests, Simulator-Build und Firmware-Build automatisch
 über GitHub Actions.
 
+## Simulator
+
+Der Simulator zeigt die Oberfläche des Geräts in einem Fenster. Platz und
+Runde liegen im Ordner `sim_data` und bleiben zwischen den Starts erhalten.
+
+| Taste | Wirkung |
+|---|---|
+| `1`, `2` | Knopf 1 und Knopf 2, kurz tippen oder lang halten |
+| Pfeil hoch / ab | auf der Bahn Richtung Grün bzw. zurück gehen |
+| `G` | GPS-Empfang aus- und einschalten |
+| `S` | Screenshot nach `screenshot.bmp` |
+
+Ohne Fenster lässt er sich mit Befehlen steuern, zum Beispiel für Screenshots:
+
+```sh
+.pio/build/simulator/program --headless --do "b1,b1,pos:218,shot:distanz.bmp"
+```
+
+`b1`/`b2` drücken einen Knopf kurz, `B1`/`B2` lang, `pos:218` stellt den
+Spieler 218 m hinter den Abschlag, `gps:off`/`gps:on` schaltet den Empfang.
+
 ## Stand
 
-Schritt 5 von 13: Der Kern ist fertig (Distanzen, GPS-Daten, Rundenmodell, Knopf-Logik, Ablaufsteuerung) und speichert Platz und Runden sicher gegen Stromausfall. Der Display-Treiber für das Gerät fehlt noch;
-die Firmware zeichnet vorerst in einen Platzhalter-Puffer.
+Schritt 6 von 13: Der Kern ist fertig und speichert sicher gegen Stromausfall.
+Der Simulator zeigt die Distanz-Ansicht; die weiteren Ansichten folgen.
+Der Display-Treiber für das Gerät fehlt noch; die Firmware zeichnet vorerst
+in einen Platzhalter-Puffer.
