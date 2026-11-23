@@ -20,6 +20,7 @@ Voraussetzung: [PlatformIO](https://platformio.org/install/cli) und SDL2
 
 ```sh
 pio test -e native                       # Unit-Tests auf dem PC
+pio test -e native_sanitize              # dieselben Tests mit Speicherfehler-Erkennung
 pio run -e simulator                     # Simulator bauen
 .pio/build/simulator/program             # Simulator starten
 pio run -e device                        # Firmware bauen
@@ -31,5 +32,5 @@ Bei jedem Push laufen Tests, Simulator-Build und Firmware-Build automatisch
 
 ## Stand
 
-Schritt 1 von 13: Projektgerüst. Der Display-Treiber für das Gerät fehlt noch;
+Schritt 2 von 13: Distanzberechnung und GPS-Daten lesen sind fertig. Der Display-Treiber für das Gerät fehlt noch;
 die Firmware zeichnet vorerst in einen Platzhalter-Puffer.

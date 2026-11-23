@@ -28,6 +28,9 @@ jobs:
       - name: Unit-Tests (PC)
         run: pio test -e native
 
+      - name: Unit-Tests mit Speicherfehler-Erkennung
+        run: pio test -e native_sanitize
+
       - name: Simulator bauen
         run: pio run -e simulator
 
