@@ -32,5 +32,5 @@ Bei jedem Push laufen Tests, Simulator-Build und Firmware-Build automatisch
 
 ## Stand
 
-Schritt 3 von 13: Distanzberechnung, GPS-Daten lesen und das Rundenmodell (Schläge, Score, Putts, Schlägervorschlag) sind fertig. Der Display-Treiber für das Gerät fehlt noch;
+Schritt 4 von 13: Der Kern ist fertig (Distanzen, GPS-Daten, Rundenmodell, Knopf-Logik und Ablaufsteuerung). Der Display-Treiber für das Gerät fehlt noch;
 die Firmware zeichnet vorerst in einen Platzhalter-Puffer.
