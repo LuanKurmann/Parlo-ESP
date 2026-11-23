@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ runner.os }}-${{ hashFiles('platformio.ini') }}
+
+      - name: Werkzeuge installieren
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libsdl2-dev
+          pip install platformio
+
+      - name: Unit-Tests (PC)
+        run: pio test -e native
+
+      - name: Simulator bauen
+        run: pio run -e simulator
+
+      - name: Simulator starten (ohne Bildschirm)
+        run: SDL_VIDEODRIVER=dummy .pio/build/simulator/program --smoke
+
+      - name: Firmware bauen
+        run: pio run -e device
