@@ -6,6 +6,7 @@
 
 #include "core/clubs.h"
 #include "core/course.h"
+#include "core/id.h"
 #include "core/round.h"
 
 namespace golf {
@@ -22,6 +23,8 @@ struct RoundState {
     int hole = 0;             // aktuelles Loch, 0 = Loch 1
     DateTime started;         // Zeitpunkt des ersten Schlags, falls bekannt
     char course_name[32] = "";
+    Id id = "";        // Kennung der Runde
+    Id course_id = ""; // Kennung des Platzes, auf dem gespielt wurde
     // Platzdaten zum Zeitpunkt der Runde, damit eine archivierte Runde auch
     // nach einem Platzwechsel ausgewertet werden kann. 0 bzw. false = unbekannt.
     int par[kMaxHoles] = {};
@@ -38,9 +41,10 @@ std::string courseToJson(const Course& course);
 // ausserhalb des Erlaubten) bleibt `course` unveraendert und es kommt false zurueck.
 bool courseFromJson(const std::string& json, Course& course);
 
-// Mit `course` werden Par und Gruenmitte jedes Lochs mitgeschrieben.
+// Mit `course` werden Kennung des Platzes sowie Par und Gruenmitte jedes Lochs
+// mitgeschrieben, mit `round_id` die Kennung der Runde.
 std::string roundToJson(const Round& round, int hole, const DateTime& started, const char* course_name,
-                        const Course* course = nullptr);
+                        const Course* course = nullptr, const char* round_id = nullptr);
 bool roundFromJson(const std::string& json, RoundState& state);
 
 // Schlagweiten pro Schlaeger. {"v":1,"carry":{"Dr":210,"H3":190,...}}

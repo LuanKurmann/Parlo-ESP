@@ -26,17 +26,25 @@ Course Session::loadCourseOrEmpty(Store& store) {
     return course;
 }
 
+void Session::newId(Id out) {
+    // Ohne Zufallsquelle wenigstens vom bisherigen Stand abhaengig machen.
+    makeId(out, random_, crcOf(courseToJson(app_.course())) ^ static_cast<uint32_t>(store_.archivedRounds().size()));
+}
+
 std::string Session::currentRoundJson() const {
-    return roundToJson(app_.round(), app_.currentHole(), started_, app_.course().name, &app_.course());
+    return roundToJson(app_.round(), app_.currentHole(), started_, app_.course().name, &app_.course(), round_id_);
 }
 
 bool Session::replaceCourse(const Course& course, bool* archived) {
     if (archived != nullptr) *archived = false;
     if (hasShots(app_.round())) {
-        if (store_.archiveRound(app_.round(), started_, app_.course().name, &app_.course()) == 0) return false;
+        if (store_.archiveRound(app_.round(), started_, app_.course().name, &app_.course(), round_id_) == 0) return false;
         if (archived != nullptr) *archived = true;
     }
-    app_.setCourse(course);
+    Course incoming = course;
+    if (incoming.id[0] == '\0') newId(incoming.id); // Platz ohne Kennung (z. B. von Hand erstellt)
+    app_.setCourse(incoming);
+    newId(round_id_);
     started_ = DateTime();
     pending_ = true;
     return sync();
@@ -48,7 +56,7 @@ bool Session::setBag(const Bag& bag) {
     return true;
 }
 
-Session::Session(FileSystem& fs) : store_(fs), app_(loadCourseOrEmpty(store_)) {
+Session::Session(FileSystem& fs, RandomFn random) : store_(fs), random_(random), app_(loadCourseOrEmpty(store_)) {
     Bag bag;
     if (store_.loadBag(bag)) app_.setBag(bag);
 
@@ -59,8 +67,21 @@ Session::Session(FileSystem& fs) : store_(fs), app_(loadCourseOrEmpty(store_)) {
         course_crc_ = crcOf(courseToJson(app_.course()));
     }
 
+    device_id_saved_ = store_.loadDeviceId(device_id_);
+    if (!device_id_saved_) newId(device_id_);
+    newId(round_id_);
+
+    // Ein Platz ohne Kennung (aeltere Datei oder noch keiner) bekommt jetzt eine;
+    // gespeichert wird sie beim naechsten sync().
+    if (app_.course().id[0] == '\0') {
+        Course course = app_.course();
+        newId(course.id);
+        app_.setCourse(course);
+    }
+
     std::unique_ptr<RoundState> state(new RoundState());
     if (store_.loadCurrentRound(*state) && app_.restoreRound(state->round, state->hole)) {
+        if (state->id[0] != '\0') std::memcpy(round_id_, state->id, sizeof(round_id_));
         started_ = state->started;
         round_saved_ = true;
         round_crc_ = crcOf(currentRoundJson());
@@ -76,13 +97,23 @@ bool Session::sync() {
 
     if (app_.roundNumber() != seen_round_number_) {
         seen_round_number_ = app_.roundNumber();
+        std::memcpy(previous_round_id_, round_id_, sizeof(previous_round_id_));
+        newId(round_id_);
         previous_started_ = started_;
         started_ = DateTime();
         archive_pending_ = hasShots(app_.previousRound());
     }
     if (archive_pending_) {
-        if (store_.archiveRound(app_.previousRound(), previous_started_, app_.course().name, &app_.course()) > 0) {
+        if (store_.archiveRound(app_.previousRound(), previous_started_, app_.course().name, &app_.course(), previous_round_id_) > 0) {
             archive_pending_ = false;
+        } else {
+            ok = false;
+        }
+    }
+
+    if (!device_id_saved_) {
+        if (store_.saveDeviceId(device_id_)) {
+            device_id_saved_ = true;
         } else {
             ok = false;
         }

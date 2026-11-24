@@ -4,6 +4,7 @@
 // der Inbetriebnahme steht in docs/inbetriebnahme.md.
 
 #include <Arduino.h>
+#include <esp_random.h>
 #include <Wire.h>
 #include <lvgl.h>
 
@@ -79,7 +80,7 @@ void setup() {
     Serial.printf("Display %s, Touch %s, Speicher %s, Akku-Chip %s\n", display_ok ? "ok" : "FEHLT",
                   touch_ok ? "ok" : "FEHLT", storage_ok ? "ok" : "FEHLT", battery_ok ? "ok" : "FEHLT");
 
-    session = new golf::Session(storage);
+    session = new golf::Session(storage, esp_random); // Hardware-Zufall fuer neue Kennungen
     gps_feed = new golf::GpsFeed(*session);
     net.begin();
     if (display_ok) golf::ui::init(session->app());

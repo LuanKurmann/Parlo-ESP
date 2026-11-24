@@ -206,6 +206,7 @@ void App::runMenuItem(MenuItem item) {
         case MenuItem::MarkGreen:
             if (has_position_) {
                 markGreen(course_.holes[hole_], position_);
+                course_.revision++;
                 message_ = Message::GreenMarked;
             } else {
                 message_ = Message::NoGpsForGreen;

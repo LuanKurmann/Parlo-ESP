@@ -16,7 +16,9 @@ class Session {
 public:
     // Laedt den gespeicherten Platz und setzt eine laufende Runde fort. Fehlt
     // etwas oder ist es beschaedigt, beginnt die App an dieser Stelle leer.
-    explicit Session(FileSystem& fs);
+    // `random` liefert Zufallszahlen fuer neue Kennungen (auf dem Geraet der
+    // Hardware-Zufallsgenerator).
+    explicit Session(FileSystem& fs, RandomFn random = nullptr);
 
     App& app() { return app_; }
     const App& app() const { return app_; }
@@ -28,6 +30,10 @@ public:
         if (now.valid && !started_.valid) pending_ = true;
     }
     const DateTime& roundStarted() const { return started_; }
+
+    // Kennungen: der laufenden Runde und dieses Geraets.
+    const char* roundId() const { return round_id_; }
+    const char* deviceId() const { return device_id_; }
 
     // Regelmaessig aufrufen (darf in jedem Durchlauf der Hauptschleife sein;
     // ohne neue Eingabe kostet es nichts). Speichert, was sich geaendert hat, und legt
@@ -48,9 +54,15 @@ public:
 private:
     static Course loadCourseOrEmpty(Store& store);
     std::string currentRoundJson() const;
+    void newId(Id out);
 
     Store store_;
+    RandomFn random_;
     App app_;
+    Id round_id_ = "";
+    Id previous_round_id_ = "";
+    Id device_id_ = "";
+    bool device_id_saved_ = false;
     DateTime now_;
     DateTime started_;
     DateTime previous_started_;

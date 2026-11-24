@@ -1,7 +1,10 @@
 // Platzdaten: Loecher mit Par und Position des Gruens.
 #pragma once
 
+#include <cstdint>
+
 #include "core/geo.h"
+#include "core/id.h"
 
 namespace golf {
 
@@ -18,6 +21,8 @@ struct Hole {
 };
 
 struct Course {
+    Id id = "";            // dauerhafte Kennung, leer solange keine vergeben ist
+    uint32_t revision = 0; // zaehlt Aenderungen am Geraet (z. B. Gruen markiert)
     char name[32] = "";
     int hole_count = kMaxHoles;
     Hole holes[kMaxHoles];

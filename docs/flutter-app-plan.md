@@ -177,7 +177,7 @@ Alles davon ist im Kern testbar, bevor die App existiert.
 
 | Nr. | Änderung | Testbar ohne Board |
 |---|---|---|
-| F1 | Dauerhafte Kennung für Runden und Plätze, Änderungszähler für Plätze, Versionsnummer der Schnittstelle | ja |
+| F1 | Dauerhafte Kennung für Runden und Plätze, Änderungszähler für Plätze, Versionsnummer der Schnittstelle | ja – **erledigt** |
 | F2 | Wählbare Schlägerliste statt fester elf Schläger; Schlägerwahl am Gerät passt sich an | ja, inklusive Screenshots |
 | F3 | Einstellungen erweitern (Helligkeit, Dimmzeit, Knöpfe tauschen) | ja |
 | F4 | Nachrichten in Stücke zerlegen und zusammensetzen; Simulator spricht dasselbe über TCP | ja |

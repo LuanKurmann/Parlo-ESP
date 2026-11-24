@@ -55,6 +55,15 @@ bool readPosition(JsonObjectConst object, const char* key, bool& present, LatLon
     return true;
 }
 
+// Liest eine Kennung, falls vorhanden. Eine vorhandene muss gueltig sein.
+bool readId(JsonVariantConst value, Id out) {
+    out[0] = '\0';
+    if (value.isNull()) return true;
+    if (!value.is<const char*>() || !isValidId(value.as<const char*>())) return false;
+    std::memcpy(out, value.as<const char*>(), kIdLength + 1);
+    return true;
+}
+
 bool readInt(JsonVariantConst value, int min, int max, int& out) {
     if (!value.is<int>()) return false;
     const int v = value.as<int>();
@@ -107,6 +116,10 @@ bool readDateTime(const char* text, DateTime& out) {
 std::string courseToJson(const Course& course) {
     JsonDocument doc;
     doc["v"] = kFormatVersion;
+    if (course.id[0] != '\0') {
+        doc["id"] = course.id;
+        doc["rev"] = course.revision;
+    }
     doc["name"] = course.name;
     JsonArray holes = doc["holes"].to<JsonArray>();
     for (int h = 0; h < course.hole_count && h < kMaxHoles; h++) {
@@ -130,6 +143,12 @@ bool courseFromJson(const std::string& json, Course& course) {
 
     Course result;
     if (!copyName(doc["name"], result.name, sizeof(result.name))) return false;
+    if (!readId(doc["id"], result.id)) return false;
+    if (!doc["rev"].isNull()) {
+        int revision = 0;
+        if (!readInt(doc["rev"], 0, 2000000000, revision)) return false;
+        result.revision = static_cast<uint32_t>(revision);
+    }
 
     JsonArrayConst holes = doc["holes"].as<JsonArrayConst>();
     if (holes.isNull() || holes.size() < 1 || holes.size() > static_cast<size_t>(kMaxHoles)) return false;
@@ -163,9 +182,11 @@ bool courseFromJson(const std::string& json, Course& course) {
 // "p" fehlt bei Schlaegen ohne GPS, "c" solange kein Schlaeger gewaehlt ist.
 
 std::string roundToJson(const Round& round, int hole, const DateTime& started, const char* course_name,
-                        const Course* course) {
+                        const Course* course, const char* round_id) {
     JsonDocument doc;
     doc["v"] = kFormatVersion;
+    if (round_id != nullptr && round_id[0] != '\0') doc["id"] = round_id;
+    if (course != nullptr && course->id[0] != '\0') doc["course_id"] = course->id;
     doc["course"] = course_name != nullptr ? course_name : "";
     doc["hole"] = hole;
     if (started.valid) {
@@ -206,6 +227,7 @@ bool roundFromJson(const std::string& json, RoundState& state) {
     RoundState result;
     result.round = Round(hole_count);
     if (!copyName(doc["course"], result.course_name, sizeof(result.course_name))) return false;
+    if (!readId(doc["id"], result.id) || !readId(doc["course_id"], result.course_id)) return false;
     if (!readInt(doc["hole"], 0, hole_count - 1, result.hole)) return false;
 
     JsonVariantConst date = doc["date"];
@@ -259,6 +281,7 @@ Course courseOf(const RoundState& state) {
     Course course;
     std::memcpy(course.name, state.course_name, sizeof(course.name));
     course.name[sizeof(course.name) - 1] = '\0';
+    std::memcpy(course.id, state.course_id, sizeof(course.id));
     course.hole_count = state.round.holeCount();
     for (int h = 0; h < course.hole_count; h++) {
         course.holes[h].par = state.par[h];

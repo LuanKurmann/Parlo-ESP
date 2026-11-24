@@ -51,7 +51,11 @@ int roundNumber(const std::string& path) {
 ApiResponse status(Session& session) {
     JsonDocument doc;
     doc["version"] = version();
+    doc["api"] = kApiVersion;
+    doc["device_id"] = session.deviceId();
     doc["course"] = session.app().course().name;
+    doc["course_id"] = session.app().course().id;
+    doc["course_rev"] = session.app().course().revision;
     doc["holes"] = session.app().round().holeCount();
     doc["current_hole"] = session.app().currentHole() + 1;
     doc["rounds"] = session.store().archivedRounds().size();
@@ -73,6 +77,7 @@ ApiResponse roundList(Session& session) {
         const RoundTotals totals = roundTotals(state->round, courseOf(*state));
         JsonObject entry = list.add<JsonObject>();
         entry["n"] = *it;
+        entry["id"] = state->id;
         if (state->started.valid) {
             char date[24];
             std::snprintf(date, sizeof(date), "%04d-%02d-%02dT%02d:%02d", state->started.year % 10000,
@@ -181,7 +186,7 @@ ApiResponse handleApi(Session& session, const ApiRequest& request, NetworkContro
     if (path == "/api/round") {
         if (method != "GET") return methodNotAllowed();
         return raw(roundToJson(session.app().round(), session.app().currentHole(), session.roundStarted(),
-                               session.app().course().name, &session.app().course()));
+                               session.app().course().name, &session.app().course(), session.roundId()));
     }
     if (path == "/api/rounds") {
         return method == "GET" ? roundList(session) : methodNotAllowed();
@@ -203,12 +208,18 @@ ApiResponse handleApi(Session& session, const ApiRequest& request, NetworkContro
         return methodNotAllowed();
     }
     if (path.compare(0, 12, "/api/rounds/") == 0) {
-        const int number = roundNumber(path);
+        // Entweder ueber die Nummer oder ueber die dauerhafte Kennung.
+        const std::string id_prefix = "/api/rounds/id/";
+        const int number = path.compare(0, id_prefix.size(), id_prefix) == 0
+                               ? session.store().findArchivedRound(path.c_str() + id_prefix.size())
+                               : roundNumber(path);
         if (number == 0) return error(404, "Runde nicht gefunden");
         if (method == "GET") {
-            std::string body;
-            if (!session.store().loadArchivedRoundJson(number, body)) return error(404, "Runde nicht gefunden");
-            return raw(body);
+            // Neu aufbereitet, damit auch aeltere Runden ihre Kennung tragen.
+            std::unique_ptr<RoundState> state(new RoundState());
+            if (!session.store().loadArchivedRound(number, *state)) return error(404, "Runde nicht gefunden");
+            const Course course = courseOf(*state);
+            return raw(roundToJson(state->round, state->hole, state->started, state->course_name, &course, state->id));
         }
         if (method == "DELETE") {
             if (!session.store().deleteArchivedRound(number)) return error(404, "Runde nicht gefunden");

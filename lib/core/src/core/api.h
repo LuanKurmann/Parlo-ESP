@@ -9,6 +9,8 @@
 //   GET    /api/rounds        Liste der archivierten Runden mit Ergebnis
 //   GET    /api/rounds/<nr>   eine archivierte Runde
 //   DELETE /api/rounds/<nr>   eine archivierte Runde loeschen
+//   GET    /api/rounds/id/<kennung>   dasselbe ueber die dauerhafte Kennung
+//   DELETE /api/rounds/id/<kennung>
 //   GET    /api/settings      Schlagweiten pro Schlaeger
 //   PUT    /api/settings      Schlagweiten setzen
 //   GET    /api/wifi          WLAN-Zustand des Geraets (nie das Passwort)
@@ -24,6 +26,12 @@
 #include "core/session.h"
 
 namespace golf {
+
+// Version der Schnittstelle. Steigt, wenn sich etwas aendert, auf das sich
+// eine App verlassen koennte.
+//   1  erste Fassung
+//   2  dauerhafte Kennungen fuer Runden, Plaetze und das Geraet
+constexpr int kApiVersion = 2;
 
 // Groesste Anfrage, die angenommen wird.
 constexpr size_t kMaxApiBodyBytes = 64 * 1024;

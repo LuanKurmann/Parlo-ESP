@@ -49,6 +49,7 @@
 #include <cstring>
 #include <fstream>
 #include <memory>
+#include <random>
 #include <sstream>
 #include <string>
 
@@ -70,6 +71,12 @@
 #include "ui/ui.h"
 
 namespace {
+
+// Zufallszahlen fuer neue Kennungen.
+uint32_t simulatorRandom() {
+    static std::random_device device;
+    return device();
+}
 
 // Simuliertes WLAN: merkt sich nur, was das Handy einstellt.
 class FakeNetwork : public golf::NetworkControl {
@@ -385,7 +392,7 @@ int main(int argc, char** argv) {
         golf::Course existing;
         if (!store.loadCourse(existing)) store.saveCourse(golf::demoCourse());
     }
-    simulator.session.reset(new golf::Session(*simulator.fs));
+    simulator.session.reset(new golf::Session(*simulator.fs, simulatorRandom));
 
     if (!replay_path.empty()) {
         std::ifstream in(replay_path, std::ios::binary);

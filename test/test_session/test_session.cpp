@@ -35,7 +35,9 @@ static Course sampleCourse(int holes = 18) {
 // Dateisystem, auf dem bereits ein Platz liegt.
 static void installCourse(MemoryFs& fs, int holes = 18) {
     Store store(fs);
-    TEST_ASSERT_TRUE(store.saveCourse(sampleCourse(holes)));
+    Course course = sampleCourse(holes);
+    std::strcpy(course.id, "0123456789abcdef"); // wie ein vom Handy geladener Platz
+    TEST_ASSERT_TRUE(store.saveCourse(course));
     fs.mutations = 0;
 }
 
@@ -232,6 +234,24 @@ static void test_course_is_only_written_when_it_changes() {
     hit(*s, 100.0);
     TEST_ASSERT_TRUE(course_before == fs.files["course.json"]);
     TEST_ASSERT_EQUAL_INT(0, static_cast<int>(fs.files.count("course.json.new")));
+}
+
+static void test_course_file_without_id_gets_one_and_is_saved_once() {
+    // Platzdatei aus einer frueheren Firmware.
+    MemoryFs fs;
+    Store(fs).saveCourse(sampleCourse());
+    std::string id;
+    {
+        auto s = start(fs);
+        TEST_ASSERT_TRUE(isValidId(s->app().course().id));
+        id = s->app().course().id;
+        TEST_ASSERT_TRUE(s->sync());
+    }
+    const int writes = fs.mutations;
+    auto s = start(fs);
+    TEST_ASSERT_EQUAL_STRING(id.c_str(), s->app().course().id); // dieselbe, nicht jedes Mal neu
+    TEST_ASSERT_TRUE(s->sync());
+    TEST_ASSERT_EQUAL_INT(writes, fs.mutations);
 }
 
 // ---------- Speicherfehler ----------
@@ -526,6 +546,7 @@ int main() {
     RUN_TEST(test_sync_without_changes_writes_nothing);
     RUN_TEST(test_restart_without_changes_writes_nothing);
     RUN_TEST(test_course_is_only_written_when_it_changes);
+    RUN_TEST(test_course_file_without_id_gets_one_and_is_saved_once);
     RUN_TEST(test_failed_save_is_reported_and_retried);
     RUN_TEST(test_power_cut_at_every_point_of_a_whole_hole);
     RUN_TEST(test_new_round_archives_the_old_one);

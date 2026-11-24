@@ -2,6 +2,7 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include <ArduinoJson.h>
 #include <unity.h>
@@ -10,6 +11,7 @@
 #include "../test_support.h"
 #include "core/api.h"
 #include "core/demo_course.h"
+#include "core/safe_file.h"
 
 using namespace golf;
 using testsupport::kTee;
@@ -84,6 +86,9 @@ static void test_status() {
     TEST_ASSERT_EQUAL_INT(200, response.status);
     JsonDocument doc = parse(response);
     TEST_ASSERT_EQUAL_STRING("0.1.0", doc["version"].as<const char*>());
+    TEST_ASSERT_EQUAL_INT(2, doc["api"].as<int>());
+    TEST_ASSERT_TRUE(isValidId(doc["device_id"].as<const char*>()));
+    TEST_ASSERT_TRUE(isValidId(doc["course_id"].as<const char*>()));
     TEST_ASSERT_EQUAL_STRING("Beispielplatz", doc["course"].as<const char*>());
     TEST_ASSERT_EQUAL_INT(18, doc["holes"].as<int>());
     TEST_ASSERT_EQUAL_INT(1, doc["current_hole"].as<int>());
@@ -177,10 +182,62 @@ static void test_put_course_replaces_and_persists() {
     TEST_ASSERT_EQUAL_INT(3, status["holes"].as<int>());
 }
 
-static void test_put_course_round_trips_through_get() {
+// Derselbe Platz, wie ihn die App schickt: mit Kennung und Aenderungszaehler.
+static const char* kSmallCourseWithId =
+    R"({"v":1,"id":"00aa11bb22cc33dd","rev":7,"name":"Kurzplatz","holes":[{"par":3,"green":[473800000,85400000],"r":120,"tee":[473790000,85400000]},{"par":4},{"par":5}]})";
+
+static void test_put_course_with_id_round_trips_through_get() {
+    Rig rig;
+    rig.call("PUT", "/api/course", kSmallCourseWithId);
+    TEST_ASSERT_EQUAL_STRING(kSmallCourseWithId, rig.call("GET", "/api/course").body.c_str());
+    JsonDocument status = parse(rig.call("GET", "/api/status"));
+    TEST_ASSERT_EQUAL_STRING("00aa11bb22cc33dd", status["course_id"].as<const char*>());
+    TEST_ASSERT_EQUAL_INT(7, status["course_rev"].as<int>());
+}
+
+static void test_put_course_without_id_gets_one() {
     Rig rig;
     rig.call("PUT", "/api/course", kSmallCourse);
-    TEST_ASSERT_EQUAL_STRING(kSmallCourse, rig.call("GET", "/api/course").body.c_str());
+    JsonDocument doc = parse(rig.call("GET", "/api/course"));
+    TEST_ASSERT_TRUE(isValidId(doc["id"].as<const char*>()));
+    TEST_ASSERT_EQUAL_INT(0, doc["rev"].as<int>());
+    TEST_ASSERT_EQUAL_STRING("Kurzplatz", doc["name"].as<const char*>());
+    const std::string first_id = doc["id"].as<const char*>();
+    rig.restart();
+    doc = parse(rig.call("GET", "/api/course"));
+    TEST_ASSERT_EQUAL_STRING(first_id.c_str(), doc["id"].as<const char*>()); // bleibt gleich
+}
+
+static void test_put_course_with_invalid_id_is_rejected() {
+    Rig rig;
+    const char* bad[] = {
+        R"({"v":1,"id":"kurz","holes":[{"par":4}]})", R"({"v":1,"id":"00AA11BB22CC33DD","holes":[{"par":4}]})",
+        R"({"v":1,"id":"00aa11bb22cc33ddee","holes":[{"par":4}]})", R"({"v":1,"id":12345,"holes":[{"par":4}]})",
+        R"({"v":1,"id":"00aa11bb22cc33dd","rev":-1,"holes":[{"par":4}]})",
+        R"({"v":1,"id":"00aa11bb22cc33dd","rev":"7","holes":[{"par":4}]})",
+    };
+    for (const char* body : bad) expectError(rig.call("PUT", "/api/course", body), 400);
+}
+
+static void test_marking_a_green_raises_the_course_revision() {
+    Rig rig;
+    rig.call("PUT", "/api/course", kSmallCourseWithId);
+    rig.app().setPosition(kTee);
+    rig.app().button2Long();
+    rig.app().selectMenuItem(MenuItem::MarkGreen);
+    rig.session->sync();
+    JsonDocument status = parse(rig.call("GET", "/api/status"));
+    TEST_ASSERT_EQUAL_INT(8, status["course_rev"].as<int>());
+    TEST_ASSERT_EQUAL_STRING("00aa11bb22cc33dd", status["course_id"].as<const char*>()); // Kennung bleibt
+    // Ohne GPS wird nichts markiert, also auch nichts gezaehlt.
+    rig.app().clearPosition();
+    rig.app().button2Long();
+    rig.app().selectMenuItem(MenuItem::MarkGreen);
+    status = parse(rig.call("GET", "/api/status"));
+    TEST_ASSERT_EQUAL_INT(8, status["course_rev"].as<int>());
+    rig.restart();
+    status = parse(rig.call("GET", "/api/status"));
+    TEST_ASSERT_EQUAL_INT(8, status["course_rev"].as<int>());
 }
 
 static void test_put_invalid_course_changes_nothing() {
@@ -379,6 +436,141 @@ static void test_delete_reports_storage_failure_as_not_deleted() {
     TEST_ASSERT_TRUE(rig.call("DELETE", "/api/rounds/1").status != 200);
     rig.fs.read_only = false;
     TEST_ASSERT_EQUAL_INT(200, rig.call("GET", "/api/rounds/1").status);
+}
+
+// ---------- Dauerhafte Kennungen ----------
+
+static void test_device_id_is_created_once_and_survives_restarts() {
+    Rig rig;
+    const std::string id = parse(rig.call("GET", "/api/status"))["device_id"].as<const char*>();
+    rig.session->sync();
+    rig.restart();
+    TEST_ASSERT_EQUAL_STRING(id.c_str(), parse(rig.call("GET", "/api/status"))["device_id"].as<const char*>());
+    rig.call("PUT", "/api/course", kSmallCourse); // ein Platzwechsel aendert sie nicht
+    rig.restart();
+    TEST_ASSERT_EQUAL_STRING(id.c_str(), parse(rig.call("GET", "/api/status"))["device_id"].as<const char*>());
+}
+
+static void test_damaged_device_file_gives_a_new_valid_id() {
+    Rig rig;
+    rig.session->sync();
+    rig.fs.files["device.json"] = wrapPayload("{\"v\":1,\"id\":\"nicht gueltig!!!\"}");
+    rig.restart();
+    TEST_ASSERT_TRUE(isValidId(parse(rig.call("GET", "/api/status"))["device_id"].as<const char*>()));
+    TEST_ASSERT_TRUE(rig.session->sync());
+}
+
+static void test_each_round_has_its_own_id_which_it_keeps_in_the_archive() {
+    Rig rig;
+    rig.hit(0.0);
+    const std::string first = parse(rig.call("GET", "/api/round"))["id"].as<const char*>();
+    TEST_ASSERT_TRUE(isValidId(first.c_str()));
+    rig.restart(); // die laufende Runde behaelt ihre Kennung ueber einen Neustart
+    TEST_ASSERT_EQUAL_STRING(first.c_str(), parse(rig.call("GET", "/api/round"))["id"].as<const char*>());
+
+    rig.endRoundAndStartNew();
+    const std::string second = parse(rig.call("GET", "/api/round"))["id"].as<const char*>();
+    TEST_ASSERT_TRUE(isValidId(second.c_str()));
+    TEST_ASSERT_TRUE(first != second);
+
+    JsonDocument list = parse(rig.call("GET", "/api/rounds"));
+    TEST_ASSERT_EQUAL_STRING(first.c_str(), list["rounds"][0]["id"].as<const char*>());
+    JsonDocument archived = parse(rig.call("GET", "/api/rounds/1"));
+    TEST_ASSERT_EQUAL_STRING(first.c_str(), archived["id"].as<const char*>());
+    TEST_ASSERT_EQUAL_STRING(rig.app().course().id, archived["course_id"].as<const char*>());
+}
+
+static void test_round_archived_by_course_change_keeps_its_id() {
+    Rig rig;
+    rig.hit(0.0);
+    const std::string id = parse(rig.call("GET", "/api/round"))["id"].as<const char*>();
+    const std::string old_course = rig.app().course().id;
+    rig.call("PUT", "/api/course", kSmallCourseWithId);
+    JsonDocument archived = parse(rig.call("GET", "/api/rounds/1"));
+    TEST_ASSERT_EQUAL_STRING(id.c_str(), archived["id"].as<const char*>());
+    TEST_ASSERT_EQUAL_STRING(old_course.c_str(), archived["course_id"].as<const char*>()); // der Platz von damals
+    TEST_ASSERT_TRUE(id != parse(rig.call("GET", "/api/round"))["id"].as<const char*>());
+}
+
+static void test_many_rounds_get_distinct_ids() {
+    Rig rig;
+    std::vector<std::string> ids;
+    for (int i = 0; i < 30; i++) {
+        rig.hit(0.0);
+        rig.endRoundAndStartNew();
+    }
+    JsonDocument list = parse(rig.call("GET", "/api/rounds"));
+    TEST_ASSERT_EQUAL_INT(30, static_cast<int>(list["rounds"].size()));
+    for (JsonVariantConst entry : list["rounds"].as<JsonArrayConst>()) {
+        const std::string id = entry["id"].as<const char*>();
+        TEST_ASSERT_TRUE(isValidId(id.c_str()));
+        for (const std::string& seen : ids) TEST_ASSERT_TRUE(seen != id);
+        ids.push_back(id);
+    }
+}
+
+static void test_get_and_delete_round_by_id() {
+    Rig rig;
+    playRound(rig, 4, 2);
+    playRound(rig, 5, 2);
+    JsonDocument list = parse(rig.call("GET", "/api/rounds"));
+    const std::string newer = list["rounds"][0]["id"].as<const char*>();
+    const std::string older = list["rounds"][1]["id"].as<const char*>();
+
+    const ApiResponse got = rig.call("GET", ("/api/rounds/id/" + older).c_str());
+    TEST_ASSERT_EQUAL_INT(200, got.status);
+    std::unique_ptr<RoundState> state(new RoundState());
+    TEST_ASSERT_TRUE(roundFromJson(got.body, *state));
+    TEST_ASSERT_EQUAL_INT(4, state->round.shotCount(0));
+    TEST_ASSERT_EQUAL_STRING(older.c_str(), state->id);
+
+    TEST_ASSERT_EQUAL_INT(200, rig.call("DELETE", ("/api/rounds/id/" + older).c_str()).status);
+    expectError(rig.call("GET", ("/api/rounds/id/" + older).c_str()), 404);
+    expectError(rig.call("DELETE", ("/api/rounds/id/" + older).c_str()), 404);
+    TEST_ASSERT_EQUAL_INT(200, rig.call("GET", ("/api/rounds/id/" + newer).c_str()).status); // die andere ist noch da
+}
+
+static void test_reused_number_cannot_be_confused_thanks_to_ids() {
+    // Runde 1 wird geloescht, danach bekommt eine neue Runde wieder die Nummer 1.
+    Rig rig;
+    playRound(rig, 4, 2);
+    const std::string old_id = parse(rig.call("GET", "/api/rounds"))["rounds"][0]["id"].as<const char*>();
+    rig.call("DELETE", "/api/rounds/1");
+    playRound(rig, 6, 3);
+    JsonDocument list = parse(rig.call("GET", "/api/rounds"));
+    TEST_ASSERT_EQUAL_INT(1, list["rounds"][0]["n"].as<int>());
+    TEST_ASSERT_TRUE(old_id != list["rounds"][0]["id"].as<const char*>());
+    expectError(rig.call("GET", ("/api/rounds/id/" + old_id).c_str()), 404); // die alte ist wirklich weg
+}
+
+static void test_invalid_ids_in_the_path() {
+    Rig rig;
+    playRound(rig, 4, 2);
+    const char* bad[] = {"/api/rounds/id/", "/api/rounds/id/1", "/api/rounds/id/zzzzzzzzzzzzzzzz", "/api/rounds/id/00AA11BB22CC33DD",
+                         "/api/rounds/id/0000000000000000", "/api/rounds/id/00aa11bb22cc33dd/x", "/api/rounds/id"};
+    for (const char* path : bad) {
+        TEST_ASSERT_EQUAL_INT_MESSAGE(404, rig.call("GET", path).status, path);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(404, rig.call("DELETE", path).status, path);
+    }
+    TEST_ASSERT_EQUAL_INT(1, static_cast<int>(rig.session->store().archivedRounds().size()));
+}
+
+static void test_old_round_file_without_id_gets_a_stable_one() {
+    // Datei aus einer frueheren Firmware: ohne Kennung.
+    Rig rig;
+    Round round;
+    round.addShotWithoutPosition(0);
+    round.setClub(0, 0, Club::Driver);
+    round.finishHole(0);
+    rig.session->store().archiveRound(round, DateTime(), "Alt");
+    TEST_ASSERT_TRUE(rig.fs.files["rounds/0001.json"].find("\"id\"") == std::string::npos);
+
+    const std::string id = parse(rig.call("GET", "/api/rounds"))["rounds"][0]["id"].as<const char*>();
+    TEST_ASSERT_TRUE(isValidId(id.c_str()));
+    rig.restart();
+    TEST_ASSERT_EQUAL_STRING(id.c_str(), parse(rig.call("GET", "/api/rounds"))["rounds"][0]["id"].as<const char*>());
+    TEST_ASSERT_EQUAL_STRING(id.c_str(), parse(rig.call("GET", "/api/rounds/1"))["id"].as<const char*>());
+    TEST_ASSERT_EQUAL_INT(200, rig.call("GET", ("/api/rounds/id/" + id).c_str()).status);
 }
 
 // ---------- Schlagweiten ----------
@@ -615,7 +807,10 @@ int main() {
     RUN_TEST(test_get_course_returns_the_stored_format);
     RUN_TEST(test_get_course_without_any_course);
     RUN_TEST(test_put_course_replaces_and_persists);
-    RUN_TEST(test_put_course_round_trips_through_get);
+    RUN_TEST(test_put_course_with_id_round_trips_through_get);
+    RUN_TEST(test_put_course_without_id_gets_one);
+    RUN_TEST(test_put_course_with_invalid_id_is_rejected);
+    RUN_TEST(test_marking_a_green_raises_the_course_revision);
     RUN_TEST(test_put_invalid_course_changes_nothing);
     RUN_TEST(test_put_course_archives_a_round_in_progress);
     RUN_TEST(test_put_course_fails_cleanly_when_round_cannot_be_archived);
@@ -630,6 +825,15 @@ int main() {
     RUN_TEST(test_delete_round);
     RUN_TEST(test_delete_does_not_touch_the_current_round);
     RUN_TEST(test_delete_reports_storage_failure_as_not_deleted);
+    RUN_TEST(test_device_id_is_created_once_and_survives_restarts);
+    RUN_TEST(test_damaged_device_file_gives_a_new_valid_id);
+    RUN_TEST(test_each_round_has_its_own_id_which_it_keeps_in_the_archive);
+    RUN_TEST(test_round_archived_by_course_change_keeps_its_id);
+    RUN_TEST(test_many_rounds_get_distinct_ids);
+    RUN_TEST(test_get_and_delete_round_by_id);
+    RUN_TEST(test_reused_number_cannot_be_confused_thanks_to_ids);
+    RUN_TEST(test_invalid_ids_in_the_path);
+    RUN_TEST(test_old_round_file_without_id_gets_a_stable_one);
     RUN_TEST(test_get_settings_default_bag);
     RUN_TEST(test_put_settings_changes_suggestions_and_persists);
     RUN_TEST(test_put_invalid_settings_changes_nothing);

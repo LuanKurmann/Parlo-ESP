@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cstring>
+#include <memory>
 
 #include "core/safe_file.h"
 
@@ -12,6 +14,7 @@ namespace {
 const char kCoursePath[] = "course.json";
 const char kRoundPath[] = "round.json";
 const char kSettingsPath[] = "settings.json";
+const char kDevicePath[] = "device.json";
 const char kArchiveDir[] = "rounds";
 constexpr int kMaxArchiveNumber = 9999;
 
@@ -48,8 +51,8 @@ bool Store::loadCourse(Course& course) {
 }
 
 bool Store::saveCurrentRound(const Round& round, int hole, const DateTime& started, const char* course_name,
-                             const Course* course) {
-    return saveCurrentRoundJson(roundToJson(round, hole, started, course_name, course));
+                             const Course* course, const char* round_id) {
+    return saveCurrentRoundJson(roundToJson(round, hole, started, course_name, course, round_id));
 }
 
 bool Store::loadCurrentRound(RoundState& state) {
@@ -67,11 +70,12 @@ std::vector<int> Store::archivedRounds() {
     return numbers;
 }
 
-int Store::archiveRound(const Round& round, const DateTime& started, const char* course_name, const Course* course) {
+int Store::archiveRound(const Round& round, const DateTime& started, const char* course_name, const Course* course,
+                        const char* round_id) {
     const std::vector<int> existing = archivedRounds();
     const int number = existing.empty() ? 1 : existing.back() + 1;
     if (number > kMaxArchiveNumber) return 0;
-    if (!saveSafely(fs_, archivePath(number), roundToJson(round, 0, started, course_name, course))) return 0;
+    if (!saveSafely(fs_, archivePath(number), roundToJson(round, 0, started, course_name, course, round_id))) return 0;
     return number;
 }
 
@@ -82,7 +86,36 @@ bool Store::loadArchivedRoundJson(int number, std::string& json) {
 
 bool Store::loadArchivedRound(int number, RoundState& state) {
     std::string json;
-    return loadArchivedRoundJson(number, json) && roundFromJson(json, state);
+    if (!loadArchivedRoundJson(number, json) || !roundFromJson(json, state)) return false;
+    // Aeltere Dateien haben keine Kennung; sie bekommen eine, die vom Inhalt
+    // abhaengt und deshalb bei jedem Laden dieselbe ist.
+    if (state.id[0] == '\0') idFromContent(state.id, json);
+    return true;
+}
+
+int Store::findArchivedRound(const char* id) {
+    if (!isValidId(id)) return 0;
+    std::unique_ptr<RoundState> state(new RoundState());
+    for (int number : archivedRounds()) {
+        if (loadArchivedRound(number, *state) && std::strcmp(state->id, id) == 0) return number;
+    }
+    return 0;
+}
+
+bool Store::saveDeviceId(const char* id) {
+    return isValidId(id) && saveSafely(fs_, kDevicePath, std::string("{\"v\":1,\"id\":\"") + id + "\"}");
+}
+
+bool Store::loadDeviceId(Id out) {
+    std::string json;
+    if (!loadSafely(fs_, kDevicePath, json)) return false;
+    // Fester Aufbau: {"v":1,"id":"<16 Zeichen>"}
+    const std::string prefix = "{\"v\":1,\"id\":\"";
+    if (json.size() != prefix.size() + kIdLength + 2 || json.compare(0, prefix.size(), prefix) != 0) return false;
+    const std::string id = json.substr(prefix.size(), kIdLength);
+    if (!isValidId(id.c_str()) || json.compare(prefix.size() + kIdLength, 2, "\"}") != 0) return false;
+    std::memcpy(out, id.c_str(), kIdLength + 1);
+    return true;
 }
 
 bool Store::deleteArchivedRound(int number) {
