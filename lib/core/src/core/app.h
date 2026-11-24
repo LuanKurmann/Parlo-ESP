@@ -87,6 +87,13 @@ public:
     // nicht zum Platz, bleibt die App unveraendert und es kommt false zurueck.
     bool restoreRound(const Round& round, int hole);
 
+    // Wechselt den Platz und beginnt darauf eine leere Runde. Die bisherige
+    // Runde ist danach weg; wer sie behalten will, sichert sie vorher.
+    void setCourse(const Course& course);
+
+    // Neue Schlagweiten fuer den Schlaegervorschlag.
+    void setBag(const Bag& bag) { bag_ = bag; }
+
     // Zaehlt hoch, sobald eine neue Runde begonnen wird. Die Runde davor
     // bleibt in previousRound() erhalten, bis die naechste beginnt.
     // Zaehlt jede Eingabe (Knopf oder Touch). Aendert er sich nicht, hat sich

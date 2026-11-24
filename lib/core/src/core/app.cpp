@@ -11,6 +11,16 @@ App::App(const Course& course, const Bag& bag)
     course_.hole_count = round_.holeCount();
 }
 
+void App::setCourse(const Course& course) {
+    course_ = course;
+    round_ = Round(clampHoleCount(course.hole_count));
+    course_.hole_count = round_.holeCount();
+    hole_ = 0;
+    view_ = View::Distance;
+    overlay_ = Overlay::None;
+    message_ = Message::None;
+}
+
 bool App::restoreRound(const Round& round, int hole) {
     if (round.holeCount() != round_.holeCount() || hole < 0 || hole >= round.holeCount()) return false;
     round_ = round;

@@ -3,6 +3,7 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 #include "core/app.h"
 #include "core/store.h"
@@ -36,8 +37,17 @@ public:
 
     bool lastSyncOk() const { return last_sync_ok_; }
 
+    // Ersetzt den Platz (Import vom Handy). Eine laufende Runde mit Schlaegen
+    // wird vorher ins Archiv gelegt; gelingt das nicht, bleibt alles beim Alten
+    // und es kommt false zurueck. `archived` meldet, ob eine Runde abgelegt wurde.
+    bool replaceCourse(const Course& course, bool* archived = nullptr);
+
+    // Setzt und speichert die Schlagweiten.
+    bool setBag(const Bag& bag);
+
 private:
     static Course loadCourseOrEmpty(Store& store);
+    std::string currentRoundJson() const;
 
     Store store_;
     App app_;

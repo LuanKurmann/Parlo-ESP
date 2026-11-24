@@ -12,12 +12,17 @@
 // Aufruf:
 //   program [--data <ordner>] [--headless] [--do <befehle>]
 //           [--replay <datei.nmea>] [--speed <faktor>] [--demo-track <datei.nmea>]
+//           [--serve <port>] [--web <ordner>]
 //
 //   --data      Ordner fuer Platz und Runden (Standard: sim_data)
 //   --no-course beginnt ohne Platzdaten statt mit dem Beispielplatz
 //   --replay    spielt eine GPS-Aufzeichnung ab statt der Pfeiltasten. Die
 //               Daten laufen durch denselben Weg wie auf dem Geraet.
 //   --speed     Zeitraffer der Wiedergabe im Fenster (Standard: 10)
+//   --serve     startet die Handy-Verbindung als lokalen Webserver: Die
+//               Web-Oberflaeche ist dann unter http://127.0.0.1:<port>/ erreichbar.
+//               Mit --headless laeuft der Simulator dabei weiter, bis er beendet wird.
+//   --web       Ordner der Web-Oberflaeche (Standard: web)
 //   --demo-track  schreibt eine Beispielaufzeichnung (drei Loecher des
 //               Beispielplatzes) in die Datei und beendet sich
 //   --headless  ohne Fenster; beendet sich nach den Befehlen. Ohne --data
@@ -56,6 +61,7 @@
 #include "core/gps_feed.h"
 #include "core/nmea_log.h"
 #include "demo_track.h"
+#include "http_server.h"
 #include "screenshot.h"
 #include "ui/ui.h"
 
@@ -260,6 +266,8 @@ int main(int argc, char** argv) {
     std::string commands;
     std::string replay_path;
     double speed = 10.0;
+    int serve_port = 0;
+    std::string web_dir = "web";
     for (int i = 1; i < argc; i++) {
         const std::string arg = argv[i];
         if (arg == "--headless" || arg == "--smoke") {
@@ -272,6 +280,10 @@ int main(int argc, char** argv) {
             commands = argv[++i];
         } else if (arg == "--replay" && i + 1 < argc) {
             replay_path = argv[++i];
+        } else if (arg == "--serve" && i + 1 < argc) {
+            serve_port = std::atoi(argv[++i]);
+        } else if (arg == "--web" && i + 1 < argc) {
+            web_dir = argv[++i];
         } else if (arg == "--speed" && i + 1 < argc) {
             speed = std::atof(argv[++i]);
             if (speed < 0.1) speed = 0.1;
@@ -329,7 +341,24 @@ int main(int argc, char** argv) {
     if (!headless) addRoundBezel();
     simulator.apply();
 
+    sim::HttpServer server;
+    if (serve_port > 0) {
+        if (!server.start(serve_port, web_dir)) {
+            std::fprintf(stderr, "Port %d laesst sich nicht oeffnen\n", serve_port);
+            return 1;
+        }
+        std::printf("Web-Oberflaeche: http://127.0.0.1:%d/\n", serve_port);
+        std::fflush(stdout);
+    }
+
     if (!simulator.runAll(commands)) return 1;
+    if (headless && serve_port > 0) {
+        for (;;) { // als Server weiterlaufen, bis der Prozess beendet wird
+            if (server.poll(*simulator.session)) golf::ui::refresh();
+            lv_timer_handler();
+            SDL_Delay(5);
+        }
+    }
     if (headless) {
         for (int frame = 0; frame < 20; frame++) lv_timer_handler();
         return 0;
@@ -359,6 +388,7 @@ int main(int argc, char** argv) {
             next_play_at = now + static_cast<uint32_t>(1000.0 / speed);
         }
 
+        if (serve_port > 0) server.poll(*simulator.session);
         simulator.apply();
         SDL_Delay(5);
     }

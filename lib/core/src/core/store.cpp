@@ -11,6 +11,7 @@ namespace {
 
 const char kCoursePath[] = "course.json";
 const char kRoundPath[] = "round.json";
+const char kSettingsPath[] = "settings.json";
 const char kArchiveDir[] = "rounds";
 constexpr int kMaxArchiveNumber = 9999;
 
@@ -46,8 +47,9 @@ bool Store::loadCourse(Course& course) {
     return loadSafely(fs_, kCoursePath, json) && courseFromJson(json, course);
 }
 
-bool Store::saveCurrentRound(const Round& round, int hole, const DateTime& started, const char* course_name) {
-    return saveCurrentRoundJson(roundToJson(round, hole, started, course_name));
+bool Store::saveCurrentRound(const Round& round, int hole, const DateTime& started, const char* course_name,
+                             const Course* course) {
+    return saveCurrentRoundJson(roundToJson(round, hole, started, course_name, course));
 }
 
 bool Store::loadCurrentRound(RoundState& state) {
@@ -65,18 +67,41 @@ std::vector<int> Store::archivedRounds() {
     return numbers;
 }
 
-int Store::archiveRound(const Round& round, const DateTime& started, const char* course_name) {
+int Store::archiveRound(const Round& round, const DateTime& started, const char* course_name, const Course* course) {
     const std::vector<int> existing = archivedRounds();
     const int number = existing.empty() ? 1 : existing.back() + 1;
     if (number > kMaxArchiveNumber) return 0;
-    if (!saveSafely(fs_, archivePath(number), roundToJson(round, 0, started, course_name))) return 0;
+    if (!saveSafely(fs_, archivePath(number), roundToJson(round, 0, started, course_name, course))) return 0;
     return number;
 }
 
-bool Store::loadArchivedRound(int number, RoundState& state) {
+bool Store::loadArchivedRoundJson(int number, std::string& json) {
     if (number < 1 || number > kMaxArchiveNumber) return false;
+    return loadSafely(fs_, archivePath(number), json);
+}
+
+bool Store::loadArchivedRound(int number, RoundState& state) {
     std::string json;
-    return loadSafely(fs_, archivePath(number), json) && roundFromJson(json, state);
+    return loadArchivedRoundJson(number, json) && roundFromJson(json, state);
+}
+
+bool Store::deleteArchivedRound(int number) {
+    if (number < 1 || number > kMaxArchiveNumber) return false;
+    const std::string path = archivePath(number);
+    bool found = false;
+    for (const std::string& candidate : {path + ".new", path}) {
+        if (!fs_.exists(candidate)) continue;
+        if (!fs_.remove(candidate)) return false;
+        found = true;
+    }
+    return found;
+}
+
+bool Store::saveBag(const Bag& bag) { return saveSafely(fs_, kSettingsPath, bagToJson(bag)); }
+
+bool Store::loadBag(Bag& bag) {
+    std::string json;
+    return loadSafely(fs_, kSettingsPath, json) && bagFromJson(json, bag);
 }
 
 } // namespace golf

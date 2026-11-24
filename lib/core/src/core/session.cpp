@@ -26,7 +26,32 @@ Course Session::loadCourseOrEmpty(Store& store) {
     return course;
 }
 
+std::string Session::currentRoundJson() const {
+    return roundToJson(app_.round(), app_.currentHole(), started_, app_.course().name, &app_.course());
+}
+
+bool Session::replaceCourse(const Course& course, bool* archived) {
+    if (archived != nullptr) *archived = false;
+    if (hasShots(app_.round())) {
+        if (store_.archiveRound(app_.round(), started_, app_.course().name, &app_.course()) == 0) return false;
+        if (archived != nullptr) *archived = true;
+    }
+    app_.setCourse(course);
+    started_ = DateTime();
+    pending_ = true;
+    return sync();
+}
+
+bool Session::setBag(const Bag& bag) {
+    if (!store_.saveBag(bag)) return false;
+    app_.setBag(bag);
+    return true;
+}
+
 Session::Session(FileSystem& fs) : store_(fs), app_(loadCourseOrEmpty(store_)) {
+    Bag bag;
+    if (store_.loadBag(bag)) app_.setBag(bag);
+
     // Was jetzt im Speicher liegt, muss nicht gleich wieder geschrieben werden.
     Course stored;
     if (store_.loadCourse(stored)) {
@@ -38,7 +63,7 @@ Session::Session(FileSystem& fs) : store_(fs), app_(loadCourseOrEmpty(store_)) {
     if (store_.loadCurrentRound(*state) && app_.restoreRound(state->round, state->hole)) {
         started_ = state->started;
         round_saved_ = true;
-        round_crc_ = crcOf(roundToJson(app_.round(), app_.currentHole(), started_, app_.course().name));
+        round_crc_ = crcOf(currentRoundJson());
     }
 }
 
@@ -56,7 +81,7 @@ bool Session::sync() {
         archive_pending_ = hasShots(app_.previousRound());
     }
     if (archive_pending_) {
-        if (store_.archiveRound(app_.previousRound(), previous_started_, app_.course().name) > 0) {
+        if (store_.archiveRound(app_.previousRound(), previous_started_, app_.course().name, &app_.course()) > 0) {
             archive_pending_ = false;
         } else {
             ok = false;
@@ -65,7 +90,7 @@ bool Session::sync() {
 
     if (!started_.valid && now_.valid && hasShots(app_.round())) started_ = now_;
 
-    const std::string round_json = roundToJson(app_.round(), app_.currentHole(), started_, app_.course().name);
+    const std::string round_json = currentRoundJson();
     const uint32_t round_crc = crcOf(round_json);
     if (!round_saved_ || round_crc != round_crc_) {
         if (store_.saveCurrentRoundJson(round_json)) {

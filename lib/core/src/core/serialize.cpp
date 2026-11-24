@@ -162,7 +162,8 @@ bool courseFromJson(const std::string& json, Course& course) {
 //  "holes":[{"done":true,"shots":[{"p":[473700000,85400000],"c":"Dr"},{"c":"Pt"}]}, ...]}
 // "p" fehlt bei Schlaegen ohne GPS, "c" solange kein Schlaeger gewaehlt ist.
 
-std::string roundToJson(const Round& round, int hole, const DateTime& started, const char* course_name) {
+std::string roundToJson(const Round& round, int hole, const DateTime& started, const char* course_name,
+                        const Course* course) {
     JsonDocument doc;
     doc["v"] = kFormatVersion;
     doc["course"] = course_name != nullptr ? course_name : "";
@@ -176,6 +177,10 @@ std::string roundToJson(const Round& round, int hole, const DateTime& started, c
     JsonArray holes = doc["holes"].to<JsonArray>();
     for (int h = 0; h < round.holeCount(); h++) {
         JsonObject o = holes.add<JsonObject>();
+        if (course != nullptr) {
+            if (course->holes[h].par > 0) o["par"] = course->holes[h].par;
+            if (course->holes[h].has_green) writePosition(o, "green", course->holes[h].green_center);
+        }
         o["done"] = round.isFinished(h);
         JsonArray shots = o["shots"].to<JsonArray>();
         for (int i = 0; i < round.shotCount(h); i++) {
@@ -212,6 +217,10 @@ bool roundFromJson(const std::string& json, RoundState& state) {
     for (JsonVariantConst item : holes) {
         JsonObjectConst o = item.as<JsonObjectConst>();
         if (o.isNull() || !o["done"].is<bool>()) return false;
+        if (!o["par"].isNull()) {
+            if (!readInt(o["par"], 3, 6, result.par[h])) return false;
+        }
+        if (!readPosition(o, "green", result.has_green[h], result.green[h])) return false;
         JsonArrayConst shots = o["shots"].as<JsonArrayConst>();
         if (shots.isNull() || shots.size() > static_cast<size_t>(kMaxShotsPerHole)) return false;
 
@@ -243,6 +252,52 @@ bool roundFromJson(const std::string& json, RoundState& state) {
         h++;
     }
     state = result;
+    return true;
+}
+
+Course courseOf(const RoundState& state) {
+    Course course;
+    std::memcpy(course.name, state.course_name, sizeof(course.name));
+    course.name[sizeof(course.name) - 1] = '\0';
+    course.hole_count = state.round.holeCount();
+    for (int h = 0; h < course.hole_count; h++) {
+        course.holes[h].par = state.par[h];
+        course.holes[h].has_green = state.has_green[h];
+        course.holes[h].green_center = state.green[h];
+    }
+    return course;
+}
+
+// ---------- Schlaegertasche ----------
+
+std::string bagToJson(const Bag& bag) {
+    JsonDocument doc;
+    doc["v"] = kFormatVersion;
+    JsonObject carry = doc["carry"].to<JsonObject>();
+    for (int i = 0; i < kClubCount; i++) {
+        const Club club = static_cast<Club>(i);
+        if (club == Club::Putter) continue; // der Putter hat keine Schlagweite
+        carry[clubShortName(club)] = bag.carry_m[i];
+    }
+    std::string out;
+    serializeJson(doc, out);
+    return out;
+}
+
+bool bagFromJson(const std::string& json, Bag& bag) {
+    JsonDocument doc;
+    if (!parseDocument(json, doc)) return false;
+    JsonObjectConst carry = doc["carry"].as<JsonObjectConst>();
+    if (carry.isNull()) return false;
+
+    Bag result;
+    for (int i = 0; i < kClubCount; i++) {
+        const Club club = static_cast<Club>(i);
+        if (club == Club::Putter) continue;
+        // Jeder Schlaeger muss da sein und eine sinnvolle Weite haben.
+        if (!readInt(carry[clubShortName(club)], 1, 400, result.carry_m[i])) return false;
+    }
+    bag = result;
     return true;
 }
 
