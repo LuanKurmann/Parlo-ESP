@@ -18,7 +18,7 @@ void put16(std::vector<uint8_t>& out, uint16_t v) {
 }
 } // namespace
 
-bool saveScreenshot(const std::string& path) {
+bool saveScreenshot(const std::string& path, bool round_mask) {
     lv_refr_now(nullptr);
     lv_draw_buf_t* shot = lv_snapshot_take(lv_screen_active(), LV_COLOR_FORMAT_XRGB8888);
     if (shot == nullptr) return false;
@@ -51,7 +51,7 @@ bool saveScreenshot(const std::string& path) {
         const uint8_t* row = shot->data + static_cast<size_t>(y) * shot->header.stride;
         for (int x = 0; x < w; x++) {
             const double dx = x + 0.5 - radius, dy = y + 0.5 - radius;
-            if (dx * dx + dy * dy > radius * radius) {
+            if (round_mask && dx * dx + dy * dy > radius * radius) {
                 out.push_back(0x2A); // Gehaeusefarbe #23282A als B, G, R
                 out.push_back(0x28);
                 out.push_back(0x23);

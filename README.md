@@ -23,6 +23,7 @@ Voraussetzung: [PlatformIO](https://platformio.org/install/cli) und SDL2
 pio test -e native                       # Unit-Tests auf dem PC
 pio test -e native_sanitize              # dieselben Tests mit Speicherfehler-Erkennung
 pio run -e simulator                     # Simulator bauen
+python3 tools/screenshot_test.py         # jede Ansicht mit ihrem Referenzbild vergleichen
 .pio/build/simulator/program             # Simulator starten (Tasten siehe unten)
 pio run -e device                        # Firmware bauen
 pio run -e device -t upload              # Firmware aufs Gerät laden
@@ -74,11 +75,28 @@ python3 tools/gpx_to_nmea.py runde.gpx runde.nmea
 
 Ohne Fenster spielt `play:60` die nächsten 60 Sekunden der Aufzeichnung ab.
 
+## Screenshot-Tests
+
+`tools/screenshot_test.py` rendert 27 Zustände der Oberfläche im Simulator und
+vergleicht sie mit den Referenzbildern in `test/screens/golden/`. Zusätzlich
+prüft es, dass nichts über den runden Displayrand hinaus gezeichnet wird.
+Welche Zustände das sind, steht in `test/screens/screens.json`.
+
+Nach einer gewollten Änderung am Aussehen werden die Referenzbilder neu erzeugt
+und mit eingecheckt (vorher anschauen):
+
+```sh
+python3 tools/screenshot_test.py --update
+```
+
+Schlägt der Test fehl, liegen das aktuelle Bild und ein Differenzbild in
+`screenshot_failures/`. Voraussetzung ist Pillow (`pip install pillow`).
+
 ## Stand
 
-Schritt 8 von 13: Der Kern ist fertig und speichert sicher gegen Stromausfall.
+Schritt 9 von 13: Der Kern ist fertig und speichert sicher gegen Stromausfall.
 Der Simulator zeigt alle Ansichten, bedienbar über Knöpfe und Touch, und
-spielt GPS-Aufzeichnungen ab. Szenario-Tests spielen ganze Runden vom
-GPS-Zeichenstrom bis zum gespeicherten Ergebnis durch.
+spielt GPS-Aufzeichnungen ab. Szenario-Tests spielen ganze Runden durch,
+Screenshot-Tests sichern das Aussehen jeder Ansicht.
 Der Display-Treiber für das Gerät fehlt noch; die Firmware zeichnet vorerst
 in einen Platzhalter-Puffer.

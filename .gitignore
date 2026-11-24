@@ -6,3 +6,4 @@ screenshot.bmp
 *.nmea
 *.bmp
 __pycache__/
+screenshot_failures/

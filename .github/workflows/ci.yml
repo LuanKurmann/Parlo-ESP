@@ -23,7 +23,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libsdl2-dev
-          pip install platformio
+          pip install platformio pillow
 
       - name: Unit-Tests (PC)
         run: pio test -e native
@@ -40,13 +40,24 @@ jobs:
           test -s distanz.bmp
           test -s schlaege.bmp
 
+      - name: Screenshot-Tests (jede Ansicht gegen ihr Referenzbild)
+        run: python3 tools/screenshot_test.py
+
+      - name: Abweichende Bilder hochladen
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshot_failures
+          path: screenshot_failures/
+          if-no-files-found: ignore
+
       - name: GPS-Aufzeichnung im Simulator abspielen
         run: |
           .pio/build/simulator/program --demo-track demo.nmea
           .pio/build/simulator/program --headless --replay demo.nmea --do "play:20,b1,b1,play:120,shot:wiedergabe.bmp"
           test -s wiedergabe.bmp
 
-      - name: GPX-Umwandler testen
+      - name: Hilfsprogramme testen
         run: |
           python3 -m unittest discover -s tools
           python3 tools/gpx_to_nmea.py tools/testdata/spaziergang.gpx spaziergang.nmea

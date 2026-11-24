@@ -14,6 +14,7 @@
 //           [--replay <datei.nmea>] [--speed <faktor>] [--demo-track <datei.nmea>]
 //
 //   --data      Ordner fuer Platz und Runden (Standard: sim_data)
+//   --no-course beginnt ohne Platzdaten statt mit dem Beispielplatz
 //   --replay    spielt eine GPS-Aufzeichnung ab statt der Pfeiltasten. Die
 //               Daten laufen durch denselben Weg wie auf dem Geraet.
 //   --speed     Zeitraffer der Wiedergabe im Fenster (Standard: 10)
@@ -28,7 +29,9 @@
 //                 click:233:300    Display an der Stelle x:y antippen
 //                 swipe:left / swipe:right   ueber das Display wischen
 //                 wait:2000        2 Sekunden warten (z. B. bis eine Einblendung weg ist)
+//                 next / prev      naechste bzw. vorherige Ansicht (ohne Touch)
 //                 shot:datei.bmp   Screenshot speichern
+//                 rawshot:datei.bmp  Screenshot ohne runde Maske (fuer Tests)
 //                 play:60          mit --replay: 60 Sekunden der Aufzeichnung abspielen
 //
 // Beispiel: program --headless --do "b1,b1,pos:218,shot:distanz.bmp"
@@ -147,7 +150,11 @@ struct Simulator {
             progress_m = 0.0;
         }
         if (gps_on) {
-            app().setPosition(golf::positionOnHole(app().course().holes[hole], progress_m));
+            const golf::Hole& current = app().course().holes[hole];
+            // Ohne Platzdaten steht der Spieler `progress_m` noerdlich eines festen Punkts.
+            app().setPosition(current.has_tee && current.has_green
+                                  ? golf::positionOnHole(current, progress_m)
+                                  : golf::LatLon{47.3769 + progress_m / 111180.0, 8.5417});
         } else {
             app().clearPosition();
         }
@@ -187,10 +194,18 @@ struct Simulator {
         } else if (command.compare(0, 5, "wait:") == 0) {
             apply();
             pump(static_cast<uint32_t>(std::atoi(command.c_str() + 5)));
+        } else if (command == "next") {
+            app().swipe(1);
+        } else if (command == "prev") {
+            app().swipe(-1);
         } else if (command.compare(0, 5, "shot:") == 0) {
             apply();
             lv_timer_handler();
             return sim::saveScreenshot(command.substr(5));
+        } else if (command.compare(0, 8, "rawshot:") == 0) {
+            apply();
+            lv_timer_handler();
+            return sim::saveScreenshot(command.substr(8), false);
         } else {
             return false;
         }
@@ -240,6 +255,7 @@ bool pressedNow(const Uint8* keys, SDL_Scancode code, bool& was_down) {
 
 int main(int argc, char** argv) {
     bool headless = false;
+    bool with_course = true;
     std::string data_dir;
     std::string commands;
     std::string replay_path;
@@ -248,6 +264,8 @@ int main(int argc, char** argv) {
         const std::string arg = argv[i];
         if (arg == "--headless" || arg == "--smoke") {
             headless = true;
+        } else if (arg == "--no-course") {
+            with_course = false;
         } else if (arg == "--data" && i + 1 < argc) {
             data_dir = argv[++i];
         } else if (arg == "--do" && i + 1 < argc) {
@@ -286,7 +304,7 @@ int main(int argc, char** argv) {
 
     Simulator simulator;
     simulator.fs.reset(new golf::PosixFileSystem(data_dir));
-    {
+    if (with_course) {
         // Beim allerersten Start den Beispielplatz ablegen.
         golf::Store store(*simulator.fs);
         golf::Course existing;
