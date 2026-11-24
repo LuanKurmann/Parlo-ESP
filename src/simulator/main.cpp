@@ -11,8 +11,14 @@
 //
 // Aufruf:
 //   program [--data <ordner>] [--headless] [--do <befehle>]
+//           [--replay <datei.nmea>] [--speed <faktor>] [--demo-track <datei.nmea>]
 //
 //   --data      Ordner fuer Platz und Runden (Standard: sim_data)
+//   --replay    spielt eine GPS-Aufzeichnung ab statt der Pfeiltasten. Die
+//               Daten laufen durch denselben Weg wie auf dem Geraet.
+//   --speed     Zeitraffer der Wiedergabe im Fenster (Standard: 10)
+//   --demo-track  schreibt eine Beispielaufzeichnung (drei Loecher des
+//               Beispielplatzes) in die Datei und beendet sich
 //   --headless  ohne Fenster; beendet sich nach den Befehlen. Ohne --data
 //               beginnt jeder Lauf mit leerem Speicher.
 //   --do        Befehle, mit Komma getrennt, werden beim Start ausgefuehrt:
@@ -23,13 +29,16 @@
 //                 swipe:left / swipe:right   ueber das Display wischen
 //                 wait:2000        2 Sekunden warten (z. B. bis eine Einblendung weg ist)
 //                 shot:datei.bmp   Screenshot speichern
+//                 play:60          mit --replay: 60 Sekunden der Aufzeichnung abspielen
 //
 // Beispiel: program --headless --do "b1,b1,pos:218,shot:distanz.bmp"
 
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
 #include <memory>
+#include <sstream>
 #include <string>
 
 #include <SDL2/SDL.h>
@@ -40,7 +49,10 @@
 #include "core/button.h"
 #include "core/posix_fs.h"
 #include "core/session.h"
-#include "sample_course.h"
+#include "core/demo_course.h"
+#include "core/gps_feed.h"
+#include "core/nmea_log.h"
+#include "demo_track.h"
 #include "screenshot.h"
 #include "ui/ui.h"
 
@@ -101,20 +113,41 @@ struct Simulator {
     std::unique_ptr<golf::PosixFileSystem> fs;
     std::unique_ptr<golf::Session> session;
     ScriptPointer pointer;
+    std::unique_ptr<golf::GpsFeed> feed;   // nur bei --replay
+    std::unique_ptr<golf::NmeaLog> track;
+    uint32_t track_ms = 0;                 // Zeit innerhalb der Aufzeichnung
     double progress_m = 0.0; // Entfernung vom Abschlag auf der Bahn
     bool gps_on = true;
     int hole = -1;
 
     golf::App& app() { return session->app(); }
 
+    // Spielt die naechsten `seconds` Sekunden der Aufzeichnung ab. Liefert
+    // false, wenn sie zu Ende ist.
+    bool play(int seconds) {
+        std::string burst;
+        for (int i = 0; i < seconds; i++) {
+            if (!track->next(burst)) return false;
+            track_ms += 1000;
+            feed->feed(burst.data(), burst.size(), track_ms);
+            feed->tick(track_ms);
+        }
+        return true;
+    }
+
     // Uebertraegt die simulierte Position in die App und sichert den Stand.
     void apply() {
+        if (track) { // die Position kommt aus der Aufzeichnung
+            session->sync();
+            golf::ui::refresh();
+            return;
+        }
         if (app().currentHole() != hole) { // neues Loch: zurueck an den Abschlag
             hole = app().currentHole();
             progress_m = 0.0;
         }
         if (gps_on) {
-            app().setPosition(sim::positionOnHole(app().course().holes[hole], progress_m));
+            app().setPosition(golf::positionOnHole(app().course().holes[hole], progress_m));
         } else {
             app().clearPosition();
         }
@@ -148,6 +181,9 @@ struct Simulator {
         } else if (command == "swipe:right") {
             apply();
             pointer.swipe(1);
+        } else if (command.compare(0, 5, "play:") == 0) {
+            if (!track) return false;
+            play(std::atoi(command.c_str() + 5));
         } else if (command.compare(0, 5, "wait:") == 0) {
             apply();
             pump(static_cast<uint32_t>(std::atoi(command.c_str() + 5)));
@@ -206,6 +242,8 @@ int main(int argc, char** argv) {
     bool headless = false;
     std::string data_dir;
     std::string commands;
+    std::string replay_path;
+    double speed = 10.0;
     for (int i = 1; i < argc; i++) {
         const std::string arg = argv[i];
         if (arg == "--headless" || arg == "--smoke") {
@@ -214,6 +252,15 @@ int main(int argc, char** argv) {
             data_dir = argv[++i];
         } else if (arg == "--do" && i + 1 < argc) {
             commands = argv[++i];
+        } else if (arg == "--replay" && i + 1 < argc) {
+            replay_path = argv[++i];
+        } else if (arg == "--speed" && i + 1 < argc) {
+            speed = std::atof(argv[++i]);
+            if (speed < 0.1) speed = 0.1;
+        } else if (arg == "--demo-track" && i + 1 < argc) {
+            std::ofstream out(argv[++i], std::ios::binary);
+            out << sim::demoTrack();
+            return out.good() ? 0 : 1;
         } else {
             std::fprintf(stderr, "Unbekanntes Argument: %s\n", arg.c_str());
             return 2;
@@ -243,9 +290,21 @@ int main(int argc, char** argv) {
         // Beim allerersten Start den Beispielplatz ablegen.
         golf::Store store(*simulator.fs);
         golf::Course existing;
-        if (!store.loadCourse(existing)) store.saveCourse(sim::sampleCourse());
+        if (!store.loadCourse(existing)) store.saveCourse(golf::demoCourse());
     }
     simulator.session.reset(new golf::Session(*simulator.fs));
+
+    if (!replay_path.empty()) {
+        std::ifstream in(replay_path, std::ios::binary);
+        std::stringstream content;
+        content << in.rdbuf();
+        simulator.track.reset(new golf::NmeaLog(content.str()));
+        if (simulator.track->burstCount() == 0) {
+            std::fprintf(stderr, "Keine GPS-Daten in %s\n", replay_path.c_str());
+            return 1;
+        }
+        simulator.feed.reset(new golf::GpsFeed(*simulator.session));
+    }
 
     golf::ui::init(simulator.app());
     simulator.pointer.attach();
@@ -260,6 +319,7 @@ int main(int argc, char** argv) {
 
     golf::Button button1, button2;
     bool g_down = false, s_down = false, left_down = false, right_down = false;
+    uint32_t next_play_at = SDL_GetTicks();
     for (;;) {
         lv_timer_handler(); // verarbeitet auch die SDL-Ereignisse (Fenster schliessen)
         const Uint8* keys = SDL_GetKeyboardState(nullptr);
@@ -275,6 +335,11 @@ int main(int argc, char** argv) {
         if (pressedNow(keys, SDL_SCANCODE_RIGHT, right_down)) simulator.app().swipe(1);
         if (pressedNow(keys, SDL_SCANCODE_G, g_down)) simulator.gps_on = !simulator.gps_on;
         if (pressedNow(keys, SDL_SCANCODE_S, s_down)) sim::saveScreenshot("screenshot.bmp");
+
+        if (simulator.track && now >= next_play_at) { // Aufzeichnung im Zeitraffer weiterspielen
+            simulator.play(1);
+            next_play_at = now + static_cast<uint32_t>(1000.0 / speed);
+        }
 
         simulator.apply();
         SDL_Delay(5);

@@ -11,7 +11,8 @@ GPS, zwei Knöpfe): Distanz zum Grün, Schläge, Schlägerwahl und Scorecard.
 | `lib/ui` | Oberfläche mit LVGL. Läuft unverändert auf dem Gerät und im Simulator. |
 | `src/device` | Einstieg der Firmware für das Gerät. |
 | `src/simulator` | Einstieg des PC-Simulators (SDL2-Fenster). |
-| `test` | Unit-Tests für den Kern. |
+| `test` | Unit- und Szenario-Tests für den Kern. |
+| `tools` | Hilfsprogramme für den PC (GPX-Umwandler). |
 
 ## Befehle
 
@@ -55,10 +56,29 @@ Spieler 218 m hinter den Abschlag, `gps:off`/`gps:on` schaltet den Empfang.
 `click:233:300` tippt das Display an, `swipe:left`/`swipe:right` wischt,
 `wait:2000` wartet zwei Sekunden.
 
+### GPS-Aufzeichnung abspielen
+
+Statt mit den Pfeiltasten kann der Simulator eine aufgezeichnete Strecke
+abspielen. Die Daten laufen dabei durch denselben Weg wie auf dem Gerät.
+
+```sh
+.pio/build/simulator/program --demo-track demo.nmea        # Beispielaufzeichnung erzeugen (3 Löcher)
+.pio/build/simulator/program --replay demo.nmea --speed 10 # im Zeitraffer abspielen
+```
+
+Eine eigene Aufzeichnung vom Handy (GPX) lässt sich umwandeln:
+
+```sh
+python3 tools/gpx_to_nmea.py runde.gpx runde.nmea
+```
+
+Ohne Fenster spielt `play:60` die nächsten 60 Sekunden der Aufzeichnung ab.
+
 ## Stand
 
-Schritt 7 von 13: Der Kern ist fertig und speichert sicher gegen Stromausfall.
-Der Simulator zeigt alle Ansichten (Distanz, Schläge, Scorecard) samt
-Schlägerwahl, Menü, Loch- und Rundenübersicht, bedienbar über Knöpfe und Touch.
+Schritt 8 von 13: Der Kern ist fertig und speichert sicher gegen Stromausfall.
+Der Simulator zeigt alle Ansichten, bedienbar über Knöpfe und Touch, und
+spielt GPS-Aufzeichnungen ab. Szenario-Tests spielen ganze Runden vom
+GPS-Zeichenstrom bis zum gespeicherten Ergebnis durch.
 Der Display-Treiber für das Gerät fehlt noch; die Firmware zeichnet vorerst
 in einen Platzhalter-Puffer.

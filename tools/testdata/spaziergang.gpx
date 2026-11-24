@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Beispiel" xmlns="http://www.topografix.com/GPX/1/1">
+  <trk><name>Loch 1 des Beispielplatzes</name><trkseg>
+    <trkpt lat="47.3769000" lon="8.5417000"><ele>430.0</ele><time>2026-11-24T08:00:00Z</time></trkpt>
+    <trkpt lat="47.3769000" lon="8.5417000"><ele>430.0</ele><time>2026-11-24T08:00:10Z</time></trkpt>
+    <trkpt lat="47.3787440" lon="8.5417000"><ele>431.5</ele><time>2026-11-24T08:02:30Z</time></trkpt>
+    <trkpt lat="47.3787440" lon="8.5417000"><ele>431.5</ele><time>2026-11-24T08:02:45Z</time></trkpt>
+    <trkpt lat="47.3799310" lon="8.5417000"><ele>432.0</ele><time>2026-11-24T08:04:15Z</time></trkpt>
+    <trkpt lat="47.3799310" lon="8.5417000"><ele>432.0</ele><time>2026-11-24T08:04:30Z</time></trkpt>
+  </trkseg></trk>
+</gpx>

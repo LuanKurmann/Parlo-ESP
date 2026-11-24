@@ -40,5 +40,17 @@ jobs:
           test -s distanz.bmp
           test -s schlaege.bmp
 
+      - name: GPS-Aufzeichnung im Simulator abspielen
+        run: |
+          .pio/build/simulator/program --demo-track demo.nmea
+          .pio/build/simulator/program --headless --replay demo.nmea --do "play:20,b1,b1,play:120,shot:wiedergabe.bmp"
+          test -s wiedergabe.bmp
+
+      - name: GPX-Umwandler testen
+        run: |
+          python3 -m unittest discover -s tools
+          python3 tools/gpx_to_nmea.py tools/testdata/spaziergang.gpx spaziergang.nmea
+          .pio/build/simulator/program --headless --replay spaziergang.nmea --do "play:300,shot:gpx.bmp"
+
       - name: Firmware bauen
         run: pio run -e device

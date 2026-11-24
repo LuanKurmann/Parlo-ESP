@@ -3,3 +3,6 @@
 *.o
 sim_data/
 screenshot.bmp
+*.nmea
+*.bmp
+__pycache__/
