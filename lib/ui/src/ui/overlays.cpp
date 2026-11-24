@@ -134,10 +134,11 @@ void Overlays::create(lv_obj_t* parent, App& app, void (*on_input)()) {
     lv_obj_add_event_cb(phone_, onDoneClicked, LV_EVENT_CLICKED, nullptr); // Tippen schliesst
     lv_obj_t* phone_caption = makeCaption(phone_, 78);
     lv_label_set_text(phone_caption, "HANDY");
-    phone_line1_ = makeCenteredLabel(phone_, &golf_font_text_20, kColorMuted, -84);
-    phone_value1_ = makeCenteredLabel(phone_, &golf_font_num_40, kColorText, -48);
-    phone_line2_ = makeCenteredLabel(phone_, &golf_font_text_20, kColorMuted, 14);
-    phone_value2_ = makeCenteredLabel(phone_, &golf_font_num_40, kColorAccent, 50);
+    phone_line1_ = makeCenteredLabel(phone_, &golf_font_text_20, kColorMuted, -96);
+    phone_value1_ = makeCenteredLabel(phone_, &golf_font_num_40, kColorText, -62);
+    phone_detail1_ = makeCenteredLabel(phone_, &golf_font_text_20, kColorText, -26);
+    phone_line2_ = makeCenteredLabel(phone_, &golf_font_text_20, kColorMuted, 22);
+    phone_value2_ = makeCenteredLabel(phone_, &golf_font_num_40, kColorAccent, 56);
     phone_hint_ = makeCenteredLabel(phone_, &golf_font_text_16, kColorMuted, 132);
     // Lange WLAN-Namen und Adressen werden mit "..." gekuerzt statt ueber den Rand zu laufen.
     for (lv_obj_t* value : {phone_value1_, phone_value2_}) {
@@ -211,6 +212,7 @@ void Overlays::show(const App& app) {
             const PhoneText text = phoneText(app);
             lv_label_set_text(phone_line1_, text.line1);
             lv_label_set_text(phone_value1_, text.value1);
+            lv_label_set_text(phone_detail1_, text.detail1);
             lv_label_set_text(phone_line2_, text.line2);
             lv_label_set_text(phone_value2_, text.value2);
             lv_label_set_text(phone_hint_, text.hint);

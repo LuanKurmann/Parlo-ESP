@@ -48,6 +48,7 @@ private:
     lv_obj_t* phone_ = nullptr;
     lv_obj_t* phone_line1_ = nullptr;
     lv_obj_t* phone_value1_ = nullptr;
+    lv_obj_t* phone_detail1_ = nullptr;
     lv_obj_t* phone_line2_ = nullptr;
     lv_obj_t* phone_value2_ = nullptr;
     lv_obj_t* phone_hint_ = nullptr;

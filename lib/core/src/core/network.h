@@ -18,6 +18,7 @@ struct NetStatus {
     NetMode mode = NetMode::Off;
     char ssid[33] = "";    // Name des WLANs (eigener Hotspot oder das verbundene)
     char address[40] = ""; // Adresse der Web-Oberflaeche, z. B. "192.168.4.1"
+    char hotspot_password[16] = ""; // nur im Modus Hotspot: steht auf dem Display, nie in der Schnittstelle
     bool has_saved_network = false;
 };
 

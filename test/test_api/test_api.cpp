@@ -472,6 +472,7 @@ public:
         current.mode = NetMode::Hotspot;
         std::snprintf(current.ssid, sizeof(current.ssid), "Golf-Tracker");
         std::snprintf(current.address, sizeof(current.address), "192.168.4.1");
+        std::snprintf(current.hotspot_password, sizeof(current.hotspot_password), "48213975");
     }
     NetStatus status() const override { return current; }
     bool saveNetwork(const char* ssid, const char* password) override {
@@ -518,6 +519,7 @@ static void test_get_wifi_status_never_contains_the_password() {
     TEST_ASSERT_EQUAL_STRING("192.168.4.1", doc["address"].as<const char*>());
     TEST_ASSERT_TRUE(doc["saved"].as<bool>());
     TEST_ASSERT_TRUE(response.body.find("geheim") == std::string::npos);
+    TEST_ASSERT_TRUE(response.body.find("48213975") == std::string::npos); // auch nicht das des Hotspots
     TEST_ASSERT_TRUE(doc["password"].isNull());
 }
 

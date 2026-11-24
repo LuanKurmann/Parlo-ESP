@@ -546,8 +546,20 @@ static void test_phone_text_hotspot() {
     const PhoneText t = phoneText(app);
     TEST_ASSERT_EQUAL_STRING("Am Handy dieses WLAN wählen:", t.line1);
     TEST_ASSERT_EQUAL_STRING("Golf-Tracker", t.value1);
+    TEST_ASSERT_EQUAL_STRING("", t.detail1); // offener Hotspot: kein Passwort
     TEST_ASSERT_EQUAL_STRING("Dann im Browser öffnen:", t.line2);
     TEST_ASSERT_EQUAL_STRING("192.168.4.1", t.value2);
+}
+
+static void test_phone_text_hotspot_shows_its_password_only_in_hotspot_mode() {
+    App app(makeCourse());
+    NetStatus status = net(NetMode::Hotspot, "Golf-Tracker", "192.168.4.1");
+    std::snprintf(status.hotspot_password, sizeof(status.hotspot_password), "48213975");
+    app.setNetStatus(status);
+    TEST_ASSERT_EQUAL_STRING("Passwort 48213975", phoneText(app).detail1);
+    status.mode = NetMode::Connected;
+    app.setNetStatus(status);
+    TEST_ASSERT_EQUAL_STRING("", phoneText(app).detail1);
 }
 
 static void test_phone_text_connecting_and_connected() {
@@ -617,6 +629,7 @@ int main() {
     RUN_TEST(test_every_message_has_a_text);
     RUN_TEST(test_phone_text_while_starting);
     RUN_TEST(test_phone_text_hotspot);
+    RUN_TEST(test_phone_text_hotspot_shows_its_password_only_in_hotspot_mode);
     RUN_TEST(test_phone_text_connecting_and_connected);
     RUN_TEST(test_phone_text_with_longest_names);
     RUN_TEST(test_menu_has_phone_entry);

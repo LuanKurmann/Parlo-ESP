@@ -256,6 +256,9 @@ PhoneText phoneText(const App& app) {
         case NetMode::Hotspot:
             std::snprintf(t.line1, sizeof(t.line1), "Am Handy dieses WLAN wählen:");
             std::snprintf(t.value1, sizeof(t.value1), "%.32s", net.ssid);
+            if (net.hotspot_password[0] != '\0') {
+                std::snprintf(t.detail1, sizeof(t.detail1), "Passwort %.15s", net.hotspot_password);
+            }
             std::snprintf(t.line2, sizeof(t.line2), "Dann im Browser öffnen:");
             std::snprintf(t.value2, sizeof(t.value2), "%.39s", net.address);
             break;

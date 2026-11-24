@@ -9,7 +9,8 @@ GPS, zwei Knöpfe): Distanz zum Grün, Schläge, Schlägerwahl und Scorecard.
 |---|---|
 | `lib/core` | Kern ohne Hardware und ohne LVGL: Berechnungen, Runde, Logik. Vollständig auf dem PC testbar. |
 | `lib/ui` | Oberfläche mit LVGL. Läuft unverändert auf dem Gerät und im Simulator. |
-| `src/device` | Einstieg der Firmware für das Gerät. |
+| `src/device` | Firmware für das Gerät: Treiber und Verdrahtung mit dem Kern. |
+| `docs` | Inbetriebnahme auf dem Gerät. |
 | `src/simulator` | Einstieg des PC-Simulators (SDL2-Fenster). |
 | `test` | Unit- und Szenario-Tests für den Kern. |
 | `tools` | Hilfsprogramme für den PC (GPX-Umwandler, Screenshot-Tests). |
@@ -112,13 +113,16 @@ Im Simulator ausprobieren:
 
 Die Schnittstelle dahinter (`/api/...`) ist in `lib/core/src/core/api.h`
 beschrieben. Sie ist nicht passwortgeschützt und nur für das eigene WLAN gedacht.
-Die WLAN-Anbindung auf dem Gerät selbst folgt mit den Gerätetreibern.
+
+Auf dem Gerät startet das WLAN über Menü → „Mit Handy verbinden“. Ohne
+gespeichertes WLAN spannt das Gerät einen eigenen, passwortgeschützten Hotspot
+auf; Name, Passwort und Adresse stehen dann auf dem Display. Im Bereich „Gerät“
+der Web-Oberfläche lässt sich das eigene WLAN eintragen.
 
 ## Stand
 
-Schritt 10 von 13: Der Kern ist fertig und speichert sicher gegen Stromausfall.
-Der Simulator zeigt alle Ansichten, spielt GPS-Aufzeichnungen ab und bedient
-die Web-Oberfläche fürs Handy. Szenario-, Screenshot- und Browser-Tests laufen
-bei jedem Push.
-Auf dem Gerät fehlen noch Display-Treiber, GPS-Anschluss und WLAN; die Firmware
-zeichnet vorerst in einen Platzhalter-Puffer.
+Schritt 11 von 13: Kern, Oberfläche und Handy-Verbindung sind fertig und
+getestet. Die Gerätetreiber (Display, Touch, Knöpfe, GPS, Speicher, WLAN) sind
+eingebunden und kompilieren, sind aber noch nie auf dem Board gelaufen. Wie
+die Inbetriebnahme abläuft und welche Annahmen dahinterstehen, steht in
+[docs/inbetriebnahme.md](docs/inbetriebnahme.md).

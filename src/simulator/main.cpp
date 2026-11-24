@@ -79,6 +79,8 @@ public:
         current.mode = mode;
         std::snprintf(current.ssid, sizeof(current.ssid), "%s", ssid);
         std::snprintf(current.address, sizeof(current.address), "%s", address);
+        std::snprintf(current.hotspot_password, sizeof(current.hotspot_password), "%s",
+                      mode == golf::NetMode::Hotspot ? "48213975" : "");
     }
     golf::NetStatus status() const override { return current; }
     bool saveNetwork(const char* ssid, const char*) override {

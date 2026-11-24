@@ -97,6 +97,7 @@ RoundSummaryText roundSummaryText(const App& app);
 struct PhoneText {
     char line1[40]; // "Am Handy dieses WLAN wählen:"
     char value1[40]; // Name des WLANs
+    char detail1[32]; // "Passwort 48213975" beim eigenen Hotspot, sonst leer
     char line2[40]; // "Dann im Browser öffnen:"
     char value2[48]; // Adresse
     char hint[40];

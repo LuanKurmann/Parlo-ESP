@@ -9,3 +9,4 @@ __pycache__/
 screenshot_failures/
 node_modules/
 package-lock.json
+src/device/web_files.h
