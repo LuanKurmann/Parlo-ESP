@@ -64,7 +64,11 @@ def outside_circle(image):
 def different_pixels(actual, golden):
     """Anzahl Pixel, die staerker als erlaubt abweichen, und das Differenzbild."""
     diff = ImageChops.difference(actual, golden)
-    strong = diff.point(lambda value: 255 if value > MAX_CHANNEL_DIFF else 0).convert("L")
+    # Groesste Abweichung der drei Farbkanaele pro Pixel; so zaehlt auch eine
+    # Aenderung, die nur eine Farbe betrifft.
+    red, green, blue = diff.split()
+    worst = ImageChops.lighter(ImageChops.lighter(red, green), blue)
+    strong = worst.point(lambda value: 255 if value > MAX_CHANNEL_DIFF else 0)
     count = strong.histogram()[255]
     return count, strong
 
