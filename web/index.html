@@ -17,6 +17,7 @@
     <button type="button" data-tab="rounds" aria-pressed="true">Runden</button>
     <button type="button" data-tab="course" aria-pressed="false">Platz</button>
     <button type="button" data-tab="clubs" aria-pressed="false">Schläger</button>
+    <button type="button" data-tab="device" aria-pressed="false" id="device-tab-button" hidden>Gerät</button>
   </nav>
 
   <main>
@@ -66,6 +67,22 @@
         <div id="club-inputs"></div>
         <button type="submit" class="primary">Speichern</button>
       </form>
+    </section>
+    <!-- Geraet -->
+    <section id="tab-device" hidden>
+      <h2>WLAN des Geräts</h2>
+      <div id="wifi-status" class="card"></div>
+
+      <h2>Mit einem WLAN verbinden</h2>
+      <p class="muted">Im eigenen WLAN oder im Hotspot des Handys hat das Handy gleichzeitig Internet. Das braucht es, um Plätze aus OpenStreetMap zu laden. Das Gerät verbindet sich damit, sobald du dort „Mit Handy verbinden“ wählst.</p>
+      <form id="wifi-form">
+        <label><span class="label">Name des WLANs</span>
+          <input id="wifi-ssid" type="text" autocomplete="off" autocapitalize="off" required maxlength="32"></label>
+        <label><span class="label">Passwort (leer bei offenem WLAN)</span>
+          <input id="wifi-password" type="password" autocomplete="off" minlength="8" maxlength="63"></label>
+        <button type="submit" class="primary">WLAN speichern</button>
+      </form>
+      <p><button type="button" id="wifi-forget" class="danger" hidden>Gespeichertes WLAN vergessen</button></p>
     </section>
   </main>
 

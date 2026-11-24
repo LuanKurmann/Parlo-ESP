@@ -7,6 +7,7 @@
 #include "core/button.h"
 #include "core/clubs.h"
 #include "core/course.h"
+#include "core/network.h"
 #include "core/round.h"
 
 namespace golf {
@@ -15,10 +16,10 @@ enum class View : uint8_t { Distance, Shots, Scorecard };
 constexpr int kViewCount = 3;
 
 // Was ueber der Ansicht liegt und die Knoepfe uebernimmt.
-enum class Overlay : uint8_t { None, ClubPicker, Menu, HoleDone, RoundSummary };
+enum class Overlay : uint8_t { None, ClubPicker, Menu, HoleDone, RoundSummary, Phone };
 
-enum class MenuItem : uint8_t { MarkGreen, PreviousHole, EndRound, Close };
-constexpr int kMenuItemCount = 4;
+enum class MenuItem : uint8_t { MarkGreen, PreviousHole, EndRound, Phone, Close };
+constexpr int kMenuItemCount = 5;
 
 // Kurze Rueckmeldungen an den Spieler (werden als Einblendung gezeigt).
 enum class Message : uint8_t {
@@ -51,6 +52,7 @@ public:
     //   Menue         Eintrag ausfuehren    -                naechster Eintrag    Menue schliessen
     //   Loch fertig   naechstes Loch        -                naechstes Loch       -
     //   Rundenende    -                     neue Runde       zurueck zur Runde    -
+    //   Handy         schliessen            -                schliessen           -
     void button1Short();
     void button1Long();
     void button2Short();
@@ -60,7 +62,7 @@ public:
     void swipe(int direction);       // +1 = naechste Ansicht, -1 = vorherige; nur ohne Overlay
     void selectClub(Club club);      // in der Schlaegerwahl
     void selectMenuItem(MenuItem item); // im Menue
-    void tap();                      // bei "Loch fertig": weiter
+    void tap();                      // bei "Loch fertig": weiter; bei "Handy": schliessen
 
     // ---------- Zustand ----------
 
@@ -70,6 +72,12 @@ public:
     Club suggestedClub() const { return suggested_; }
     MenuItem menuSelection() const { return menu_; }
     bool hasPosition() const { return has_position_; }
+
+    // Solange die Ansicht "Mit Handy verbinden" offen ist, soll das WLAN laufen.
+    // Wer das WLAN betreibt, meldet dessen Zustand mit setNetStatus().
+    bool phoneWanted() const { return overlay_ == Overlay::Phone; }
+    void setNetStatus(const NetStatus& status) { net_status_ = status; }
+    const NetStatus& netStatus() const { return net_status_; }
 
     // Liefert die anstehende Rueckmeldung und loescht sie.
     Message takeMessage();
@@ -128,6 +136,7 @@ private:
     Message message_ = Message::None;
     bool has_position_ = false;
     LatLon position_{0.0, 0.0};
+    NetStatus net_status_;
 };
 
 // Leitet ein Knopf-Ereignis an die App weiter. button ist 1 oder 2.

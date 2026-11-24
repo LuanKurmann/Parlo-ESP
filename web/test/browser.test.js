@@ -339,6 +339,40 @@ test('Runde loeschen braucht zwei Tipps', async () => {
   await page.context().close();
 });
 
+test('WLAN des Geraets einstellen', async () => {
+  const page = await newPage();
+  await page.goto(baseUrl + '/');
+  await page.waitForSelector('#device-tab-button:not([hidden])');
+  await page.click('[data-tab="device"]');
+  assert.match(await page.textContent('#wifi-status'), /eigenes WLAN auf:\s*Golf-Tracker/);
+  assert.match(await page.textContent('#wifi-saved'), /Noch kein WLAN gespeichert/);
+  assert.ok(await page.isHidden('#wifi-forget'));
+
+  // Zu kurzes Passwort schickt der Browser nicht ab.
+  await page.fill('#wifi-ssid', 'Heimnetz');
+  await page.fill('#wifi-password', 'kurz');
+  await page.click('#wifi-form button[type="submit"]');
+  await page.waitForTimeout(300);
+  assert.equal((await getJson('/api/wifi')).saved, false);
+
+  await page.fill('#wifi-password', 'streng geheim 1');
+  await page.click('#wifi-form button[type="submit"]');
+  await page.waitForFunction(() => document.querySelector('#wifi-saved').textContent.includes('Ein WLAN ist gespeichert'));
+  assert.equal(await page.inputValue('#wifi-password'), ''); // Passwort bleibt nicht im Feld stehen
+  const wifi = await getJson('/api/wifi');
+  assert.equal(wifi.saved, true);
+  assert.equal(wifi.ssid, 'Heimnetz');
+  assert.equal(JSON.stringify(wifi).includes('geheim'), false);
+  await noSidewaysScroll(page);
+  await shot(page, '5-geraet');
+
+  await page.click('#wifi-forget');
+  await page.waitForFunction(() => document.querySelector('#wifi-saved').textContent.includes('Noch kein WLAN'));
+  assert.equal((await getJson('/api/wifi')).saved, false);
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});
+
 test('Geraet nicht erreichbar zeigt eine klare Meldung', async () => {
   const page = await newPage();
   await page.route('**/api/**', route => route.abort());

@@ -116,19 +116,19 @@ bool HttpServer::start(int port, const std::string& web_dir) {
     return true;
 }
 
-bool HttpServer::poll(golf::Session& session) {
+bool HttpServer::poll(golf::Session& session, golf::NetworkControl* network) {
     bool changed = false;
     if (listener_ < 0) return false;
     for (;;) {
         const int client = accept(listener_, nullptr, nullptr);
         if (client < 0) break;
-        handleClient(client, session, changed);
+        handleClient(client, session, network, changed);
         close(client);
     }
     return changed;
 }
 
-void HttpServer::handleClient(int client, golf::Session& session, bool& changed) {
+void HttpServer::handleClient(int client, golf::Session& session, golf::NetworkControl* network, bool& changed) {
     std::string method, target, body;
     if (!readRequest(client, method, target, body)) return;
     const std::string path = target.substr(0, target.find('?'));
@@ -138,7 +138,7 @@ void HttpServer::handleClient(int client, golf::Session& session, bool& changed)
         request.method = method;
         request.path = path;
         request.body = body;
-        const golf::ApiResponse response = golf::handleApi(session, request);
+        const golf::ApiResponse response = golf::handleApi(session, request, network);
         if (method != "GET") changed = true;
         respond(client, response.status, response.content_type, response.body);
         return;

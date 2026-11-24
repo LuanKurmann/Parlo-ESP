@@ -164,6 +164,7 @@ const char* menuItemText(MenuItem item) {
         case MenuItem::MarkGreen: return "Grün hier markieren";
         case MenuItem::PreviousHole: return "Vorheriges Loch";
         case MenuItem::EndRound: return "Runde beenden";
+        case MenuItem::Phone: return "Mit Handy verbinden";
         case MenuItem::Close: return "Schliessen";
     }
     return "";
@@ -237,6 +238,35 @@ RoundSummaryText roundSummaryText(const App& app) {
         std::snprintf(t.detail, sizeof(t.detail), "%d %s", totals.putts, putt_word);
     }
     std::snprintf(t.hint, sizeof(t.hint), "Knopf 1 lang: neue Runde · Knopf 2: zurück");
+    return t;
+}
+
+PhoneText phoneText(const App& app) {
+    PhoneText t;
+    std::memset(&t, 0, sizeof(t));
+    const NetStatus& net = app.netStatus();
+    switch (net.mode) {
+        case NetMode::Off:
+            std::snprintf(t.line1, sizeof(t.line1), "WLAN wird gestartet ...");
+            break;
+        case NetMode::Connecting:
+            std::snprintf(t.line1, sizeof(t.line1), "Verbinde mit WLAN");
+            std::snprintf(t.value1, sizeof(t.value1), "%.32s", net.ssid);
+            break;
+        case NetMode::Hotspot:
+            std::snprintf(t.line1, sizeof(t.line1), "Am Handy dieses WLAN wählen:");
+            std::snprintf(t.value1, sizeof(t.value1), "%.32s", net.ssid);
+            std::snprintf(t.line2, sizeof(t.line2), "Dann im Browser öffnen:");
+            std::snprintf(t.value2, sizeof(t.value2), "%.39s", net.address);
+            break;
+        case NetMode::Connected:
+            std::snprintf(t.line1, sizeof(t.line1), "Verbunden mit WLAN");
+            std::snprintf(t.value1, sizeof(t.value1), "%.32s", net.ssid);
+            std::snprintf(t.line2, sizeof(t.line2), "Am Handy im Browser öffnen:");
+            std::snprintf(t.value2, sizeof(t.value2), "%.39s", net.address);
+            break;
+    }
+    std::snprintf(t.hint, sizeof(t.hint), "Knopf drücken zum Beenden");
     return t;
 }
 

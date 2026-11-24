@@ -70,6 +70,7 @@ void App::button1Short() {
         case Overlay::Menu: runMenuItem(menu_); break;
         case Overlay::HoleDone: nextHole(); break;
         case Overlay::RoundSummary: break; // neue Runde nur mit langem Druck
+        case Overlay::Phone: overlay_ = Overlay::None; break;
     }
 }
 
@@ -80,7 +81,8 @@ void App::button1Long() {
         case Overlay::ClubPicker: undo(); break;
         case Overlay::RoundSummary: newRound(); break;
         case Overlay::Menu:
-        case Overlay::HoleDone: break;
+        case Overlay::HoleDone:
+        case Overlay::Phone: break;
     }
 }
 
@@ -91,7 +93,8 @@ void App::button2Short() {
         case Overlay::ClubPicker: suggested_ = nextClub(suggested_); break;
         case Overlay::Menu: menu_ = static_cast<MenuItem>((static_cast<int>(menu_) + 1) % kMenuItemCount); break;
         case Overlay::HoleDone: nextHole(); break;
-        case Overlay::RoundSummary: overlay_ = Overlay::None; break;
+        case Overlay::RoundSummary:
+        case Overlay::Phone: overlay_ = Overlay::None; break;
     }
 }
 
@@ -128,7 +131,11 @@ void App::selectMenuItem(MenuItem item) {
 
 void App::tap() {
     input_count_++;
-    if (overlay_ == Overlay::HoleDone) nextHole();
+    if (overlay_ == Overlay::HoleDone) {
+        nextHole();
+    } else if (overlay_ == Overlay::Phone) {
+        overlay_ = Overlay::None;
+    }
 }
 
 // ---------- Ablauf ----------
@@ -192,6 +199,7 @@ void App::runMenuItem(MenuItem item) {
             }
             break;
         case MenuItem::EndRound: overlay_ = Overlay::RoundSummary; break;
+        case MenuItem::Phone: overlay_ = Overlay::Phone; break;
         case MenuItem::Close: break;
     }
 }

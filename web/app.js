@@ -86,7 +86,7 @@
   // ---------- Tabs ----------
 
   function showTab(name) {
-    ['rounds', 'course', 'clubs'].forEach(function (tab) {
+    ['rounds', 'course', 'clubs', 'device'].forEach(function (tab) {
       $('tab-' + tab).hidden = tab !== name;
       document.querySelector('[data-tab="' + tab + '"]').setAttribute('aria-pressed', String(tab === name));
     });
@@ -374,6 +374,51 @@
     }).catch(function (e) { toast(e.message, true); });
   }
 
+  // ---------- Geraet: WLAN ----------
+
+  var WIFI_MODES = {
+    off: 'WLAN ist aus.',
+    connecting: 'Das Gerät verbindet sich gerade mit dem WLAN',
+    hotspot: 'Das Gerät spannt ein eigenes WLAN auf:',
+    connected: 'Das Gerät ist verbunden mit dem WLAN'
+  };
+
+  function renderWifi(wifi) {
+    replace($('wifi-status'), [
+      el('p', {}, [WIFI_MODES[wifi.mode] || wifi.mode, wifi.ssid ? ' ' : null, wifi.ssid ? el('strong', { id: 'wifi-current' }, wifi.ssid) : null]),
+      wifi.address ? el('p', { class: 'muted' }, 'Adresse dieser Seite: ' + wifi.address) : null,
+      el('p', { class: 'muted', id: 'wifi-saved' }, wifi.saved ? 'Ein WLAN ist gespeichert.' : 'Noch kein WLAN gespeichert.')
+    ]);
+    $('wifi-forget').hidden = !wifi.saved;
+  }
+
+  // Den Bereich gibt es nur, wenn das Geraet sein WLAN einstellen laesst.
+  function loadWifi() {
+    return fetch('/api/wifi').then(function (response) {
+      if (!response.ok) return null;
+      return response.json().then(function (wifi) {
+        $('device-tab-button').hidden = false;
+        renderWifi(wifi);
+      });
+    }, function () { return null; });
+  }
+
+  function saveWifi() {
+    var ssid = $('wifi-ssid').value;
+    api('PUT', '/api/wifi', { ssid: ssid, password: $('wifi-password').value }).then(function () {
+      $('wifi-password').value = '';
+      toast('WLAN gespeichert. Auf dem Gerät „Mit Handy verbinden“ neu öffnen.');
+      return loadWifi();
+    }).catch(function (e) { toast(e.message, true); });
+  }
+
+  function forgetWifi() {
+    api('DELETE', '/api/wifi').then(function () {
+      toast('WLAN vergessen');
+      return loadWifi();
+    }).catch(function (e) { toast(e.message, true); });
+  }
+
   // ---------- Start ----------
 
   function loadStatus() {
@@ -391,6 +436,8 @@
     if (name.length >= 3) searchCourses(name);
   });
   $('clubs-form').addEventListener('submit', function (event) { event.preventDefault(); saveBag(); });
+  $('wifi-form').addEventListener('submit', function (event) { event.preventDefault(); saveWifi(); });
+  $('wifi-forget').addEventListener('click', forgetWifi);
   $('course-export').addEventListener('click', function () {
     if (state.course) download('platz.json', JSON.stringify(state.course), 'application/json');
   });
@@ -407,6 +454,7 @@
     event.target.value = '';
   });
 
+  loadWifi();
   Promise.all([loadStatus(), loadCourse(), loadBag(), loadRounds()]).catch(function (e) {
     $('status').textContent = e.message;
     $('status').className = 'error';

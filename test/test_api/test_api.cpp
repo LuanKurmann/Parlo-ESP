@@ -458,6 +458,137 @@ static void test_random_requests_never_break_the_session() {
     TEST_ASSERT_TRUE(rig.app().round().holeCount() >= 1);
 }
 
+// ---------- WLAN ----------
+
+// Attrappe fuer das WLAN des Geraets.
+class FakeNetwork : public NetworkControl {
+public:
+    NetStatus current;
+    std::string saved_ssid, saved_password;
+    bool fail = false;
+    int saves = 0, forgets = 0;
+
+    FakeNetwork() {
+        current.mode = NetMode::Hotspot;
+        std::snprintf(current.ssid, sizeof(current.ssid), "Golf-Tracker");
+        std::snprintf(current.address, sizeof(current.address), "192.168.4.1");
+    }
+    NetStatus status() const override { return current; }
+    bool saveNetwork(const char* ssid, const char* password) override {
+        if (fail) return false;
+        saves++;
+        saved_ssid = ssid;
+        saved_password = password;
+        current.has_saved_network = true;
+        return true;
+    }
+    bool forgetNetwork() override {
+        if (fail) return false;
+        forgets++;
+        saved_ssid.clear();
+        saved_password.clear();
+        current.has_saved_network = false;
+        return true;
+    }
+};
+
+static ApiResponse callNet(Rig& rig, FakeNetwork& network, const char* method, const std::string& body = "") {
+    ApiRequest request;
+    request.method = method;
+    request.path = "/api/wifi";
+    request.body = body;
+    return handleApi(*rig.session, request, &network);
+}
+
+static void test_wifi_endpoint_is_absent_without_network_control() {
+    Rig rig;
+    expectError(rig.call("GET", "/api/wifi"), 404);
+    expectError(rig.call("PUT", "/api/wifi", R"({"ssid":"X","password":"12345678"})"), 404);
+}
+
+static void test_get_wifi_status_never_contains_the_password() {
+    Rig rig;
+    FakeNetwork network;
+    callNet(rig, network, "PUT", R"({"ssid":"Heimnetz","password":"streng geheim 123"})");
+    const ApiResponse response = callNet(rig, network, "GET");
+    TEST_ASSERT_EQUAL_INT(200, response.status);
+    JsonDocument doc = parse(response);
+    TEST_ASSERT_EQUAL_STRING("hotspot", doc["mode"].as<const char*>());
+    TEST_ASSERT_EQUAL_STRING("Golf-Tracker", doc["ssid"].as<const char*>());
+    TEST_ASSERT_EQUAL_STRING("192.168.4.1", doc["address"].as<const char*>());
+    TEST_ASSERT_TRUE(doc["saved"].as<bool>());
+    TEST_ASSERT_TRUE(response.body.find("geheim") == std::string::npos);
+    TEST_ASSERT_TRUE(doc["password"].isNull());
+}
+
+static void test_wifi_modes_are_reported() {
+    Rig rig;
+    FakeNetwork network;
+    const struct {
+        NetMode mode;
+        const char* name;
+    } cases[] = {{NetMode::Off, "off"}, {NetMode::Connecting, "connecting"}, {NetMode::Hotspot, "hotspot"}, {NetMode::Connected, "connected"}};
+    for (const auto& c : cases) {
+        network.current.mode = c.mode;
+        JsonDocument doc = parse(callNet(rig, network, "GET"));
+        TEST_ASSERT_EQUAL_STRING(c.name, doc["mode"].as<const char*>());
+    }
+}
+
+static void test_put_wifi_saves_name_and_password() {
+    Rig rig;
+    FakeNetwork network;
+    TEST_ASSERT_EQUAL_INT(200, callNet(rig, network, "PUT", R"({"ssid":"Heimnetz Müller","password":"p4ss wort!"})").status);
+    TEST_ASSERT_EQUAL_STRING("Heimnetz Müller", network.saved_ssid.c_str());
+    TEST_ASSERT_EQUAL_STRING("p4ss wort!", network.saved_password.c_str());
+    // Offenes WLAN: leeres oder fehlendes Passwort.
+    TEST_ASSERT_EQUAL_INT(200, callNet(rig, network, "PUT", R"({"ssid":"Offen","password":""})").status);
+    TEST_ASSERT_EQUAL_STRING("", network.saved_password.c_str());
+    TEST_ASSERT_EQUAL_INT(200, callNet(rig, network, "PUT", R"({"ssid":"Offen2"})").status);
+    TEST_ASSERT_EQUAL_STRING("Offen2", network.saved_ssid.c_str());
+    // Grenzen: 32 Zeichen Name, 8 und 63 Zeichen Passwort.
+    const std::string longest = R"({"ssid":")" + std::string(32, 'n') + R"(","password":")" + std::string(63, 'p') + R"("})";
+    TEST_ASSERT_EQUAL_INT(200, callNet(rig, network, "PUT", longest).status);
+    TEST_ASSERT_EQUAL_INT(200, callNet(rig, network, "PUT", R"({"ssid":"X","password":"12345678"})").status);
+}
+
+static void test_put_invalid_wifi_is_rejected() {
+    Rig rig;
+    FakeNetwork network;
+    const std::string too_long_name = R"({"ssid":")" + std::string(33, 'n') + R"(","password":"12345678"})";
+    const std::string too_long_password = R"({"ssid":"X","password":")" + std::string(64, 'p') + R"("})";
+    const std::string bad[] = {
+        "", "kein json", "[]", "{}", R"({"password":"12345678"})", R"({"ssid":"","password":"12345678"})",
+        R"({"ssid":5,"password":"12345678"})", R"({"ssid":"X","password":"1234567"})", // 7 Zeichen
+        R"({"ssid":"X","password":12345678})", R"({"ssid":"Zeile\numbruch","password":"12345678"})",
+        R"({"ssid":"X","password":"tab\tdrin12"})", too_long_name, too_long_password,
+    };
+    for (const std::string& body : bad) {
+        const ApiResponse response = callNet(rig, network, "PUT", body);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(400, response.status, body.c_str());
+    }
+    TEST_ASSERT_EQUAL_INT(0, network.saves);
+}
+
+static void test_delete_wifi_forgets_the_network() {
+    Rig rig;
+    FakeNetwork network;
+    callNet(rig, network, "PUT", R"({"ssid":"Heimnetz","password":"12345678"})");
+    TEST_ASSERT_EQUAL_INT(200, callNet(rig, network, "DELETE").status);
+    TEST_ASSERT_EQUAL_INT(1, network.forgets);
+    JsonDocument doc = parse(callNet(rig, network, "GET"));
+    TEST_ASSERT_FALSE(doc["saved"].as<bool>());
+}
+
+static void test_wifi_storage_failure_and_wrong_method() {
+    Rig rig;
+    FakeNetwork network;
+    network.fail = true;
+    expectError(callNet(rig, network, "PUT", R"({"ssid":"Heimnetz","password":"12345678"})"), 500);
+    expectError(callNet(rig, network, "DELETE"), 500);
+    expectError(callNet(rig, network, "POST", "{}"), 405);
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(test_status);
@@ -488,5 +619,12 @@ int main() {
     RUN_TEST(test_put_settings_reports_storage_failure);
     RUN_TEST(test_damaged_settings_file_falls_back_to_defaults);
     RUN_TEST(test_random_requests_never_break_the_session);
+    RUN_TEST(test_wifi_endpoint_is_absent_without_network_control);
+    RUN_TEST(test_get_wifi_status_never_contains_the_password);
+    RUN_TEST(test_wifi_modes_are_reported);
+    RUN_TEST(test_put_wifi_saves_name_and_password);
+    RUN_TEST(test_put_invalid_wifi_is_rejected);
+    RUN_TEST(test_delete_wifi_forgets_the_network);
+    RUN_TEST(test_wifi_storage_failure_and_wrong_method);
     return UNITY_END();
 }

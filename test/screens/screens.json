@@ -24,6 +24,11 @@
     {"name": "menue", "do": "B2"},
     {"name": "menue_dritter_eintrag", "do": "B2,b2,b2"},
 
+    {"name": "handy_startet", "do": "B2,b2,b2,b2,b1"},
+    {"name": "handy_hotspot", "do": "net:hotspot,B2,b2,b2,b2,b1"},
+    {"name": "handy_verbindet", "do": "net:connecting,B2,b2,b2,b2,b1"},
+    {"name": "handy_verbunden", "do": "net:connected,B2,b2,b2,b2,b1"},
+
     {"name": "loch_fertig_par", "do": "b1,b1,pos:218,b1,b1,pos:336,b1,b1,pos:341,b1,b1,b2"},
     {"name": "loch_fertig_birdie", "do": "b1,b1,pos:218,b1,b1,pos:340,b1,b1,b2"},
     {"name": "loch_fertig_ueber_par", "do": "b1,b1,pos:100,b1,b1,pos:200,b1,b1,pos:300,b1,b1,pos:336,b1,b1,b1,b1,b1,b1,b2"},

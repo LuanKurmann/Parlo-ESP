@@ -1,6 +1,7 @@
 #include "ui/overlays.h"
 
 #include <cstdint>
+#include <initializer_list>
 
 #include "ui/theme.h"
 #include "ui/views.h"
@@ -96,15 +97,15 @@ void Overlays::create(lv_obj_t* parent, App& app, void (*on_input)()) {
 
     // ---------- Menue ----------
     menu_ = makeOverlay(parent);
-    lv_obj_t* menu_caption = makeCaption(menu_, 62);
+    lv_obj_t* menu_caption = makeCaption(menu_, 52);
     lv_label_set_text(menu_caption, "MENÜ");
     lv_obj_t* item_column = makeBox(menu_);
     lv_obj_set_size(item_column, 300, LV_SIZE_CONTENT);
     lv_obj_set_flex_flow(item_column, LV_FLEX_FLOW_COLUMN);
     lv_obj_set_style_pad_row(item_column, 8, 0);
-    lv_obj_align(item_column, LV_ALIGN_TOP_MID, 0, 104);
+    lv_obj_align(item_column, LV_ALIGN_TOP_MID, 0, 90);
     for (int i = 0; i < kMenuItemCount; i++) {
-        items_[i] = makeTile(item_column, 300, 58, &golf_font_text_26, &item_labels_[i]);
+        items_[i] = makeTile(item_column, 300, 50, &golf_font_text_26, &item_labels_[i]);
         lv_label_set_text(item_labels_[i], menuItemText(static_cast<MenuItem>(i)));
         lv_obj_set_style_bg_color(items_[i], color(kColorChip), 0);
         lv_obj_add_event_cb(items_[i], onMenuClicked, LV_EVENT_CLICKED, reinterpret_cast<void*>(static_cast<intptr_t>(i)));
@@ -127,10 +128,26 @@ void Overlays::create(lv_obj_t* parent, App& app, void (*on_input)()) {
     summary_line_ = makeCenteredLabel(summary_, &golf_font_num_40, kColorText, 32);
     summary_detail_ = makeCenteredLabel(summary_, &golf_font_text_20, kColorMuted, 76);
     summary_hint_ = makeCenteredLabel(summary_, &golf_font_text_16, kColorMuted, 132);
+
+    // ---------- Mit Handy verbinden ----------
+    phone_ = makeOverlay(parent);
+    lv_obj_add_event_cb(phone_, onDoneClicked, LV_EVENT_CLICKED, nullptr); // Tippen schliesst
+    lv_obj_t* phone_caption = makeCaption(phone_, 78);
+    lv_label_set_text(phone_caption, "HANDY");
+    phone_line1_ = makeCenteredLabel(phone_, &golf_font_text_20, kColorMuted, -84);
+    phone_value1_ = makeCenteredLabel(phone_, &golf_font_num_40, kColorText, -48);
+    phone_line2_ = makeCenteredLabel(phone_, &golf_font_text_20, kColorMuted, 14);
+    phone_value2_ = makeCenteredLabel(phone_, &golf_font_num_40, kColorAccent, 50);
+    phone_hint_ = makeCenteredLabel(phone_, &golf_font_text_16, kColorMuted, 132);
+    // Lange WLAN-Namen und Adressen werden mit "..." gekuerzt statt ueber den Rand zu laufen.
+    for (lv_obj_t* value : {phone_value1_, phone_value2_}) {
+        lv_obj_set_width(value, 380);
+        lv_label_set_long_mode(value, LV_LABEL_LONG_DOT);
+    }
 }
 
 void Overlays::showOnly(lv_obj_t* active) {
-    lv_obj_t* all[] = {club_, menu_, done_, summary_};
+    lv_obj_t* all[] = {club_, menu_, done_, summary_, phone_};
     for (lv_obj_t* overlay : all) {
         if (overlay == active) {
             lv_obj_remove_flag(overlay, LV_OBJ_FLAG_HIDDEN);
@@ -187,6 +204,17 @@ void Overlays::show(const App& app) {
             lv_label_set_text(done_putts_, text.putts);
             lv_label_set_text(done_hint_, text.hint);
             showOnly(done_);
+            break;
+        }
+
+        case Overlay::Phone: {
+            const PhoneText text = phoneText(app);
+            lv_label_set_text(phone_line1_, text.line1);
+            lv_label_set_text(phone_value1_, text.value1);
+            lv_label_set_text(phone_line2_, text.line2);
+            lv_label_set_text(phone_value2_, text.value2);
+            lv_label_set_text(phone_hint_, text.hint);
+            showOnly(phone_);
             break;
         }
 

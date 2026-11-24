@@ -93,6 +93,17 @@ struct RoundSummaryText {
 
 RoundSummaryText roundSummaryText(const App& app);
 
+// Ansicht "Mit Handy verbinden": was am Handy zu tun ist.
+struct PhoneText {
+    char line1[40]; // "Am Handy dieses WLAN wählen:"
+    char value1[40]; // Name des WLANs
+    char line2[40]; // "Dann im Browser öffnen:"
+    char value2[48]; // Adresse
+    char hint[40];
+};
+
+PhoneText phoneText(const App& app);
+
 // Text einer Rueckmeldung, leer fuer Message::None.
 const char* messageText(Message message);
 

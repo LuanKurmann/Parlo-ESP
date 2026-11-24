@@ -1,6 +1,7 @@
 #include "core/api.h"
 
 #include <cstdio>
+#include <cstring>
 #include <memory>
 #include <vector>
 
@@ -104,9 +105,63 @@ ApiResponse putSettings(Session& session, const std::string& body) {
     return json(200, doc);
 }
 
+const char* modeName(NetMode mode) {
+    switch (mode) {
+        case NetMode::Off: return "off";
+        case NetMode::Connecting: return "connecting";
+        case NetMode::Hotspot: return "hotspot";
+        case NetMode::Connected: return "connected";
+    }
+    return "off";
+}
+
+ApiResponse getWifi(NetworkControl& network) {
+    const NetStatus status = network.status();
+    JsonDocument doc;
+    doc["mode"] = modeName(status.mode);
+    doc["ssid"] = status.ssid;
+    doc["address"] = status.address;
+    doc["saved"] = status.has_saved_network;
+    return json(200, doc);
+}
+
+// Druckbare Zeichen, keine Steuerzeichen.
+bool printable(const char* text) {
+    for (const char* p = text; *p != '\0'; p++) {
+        if (static_cast<unsigned char>(*p) < 0x20 || *p == 0x7F) return false;
+    }
+    return true;
+}
+
+ApiResponse putWifi(NetworkControl& network, const std::string& body) {
+    JsonDocument doc;
+    if (deserializeJson(doc, body) != DeserializationError::Ok || !doc.is<JsonObjectConst>()) {
+        return error(400, "Ungueltige WLAN-Daten");
+    }
+    if (!doc["ssid"].is<const char*>()) return error(400, "WLAN-Name fehlt");
+    const char* ssid = doc["ssid"].as<const char*>();
+    const char* password = doc["password"].is<const char*>() ? doc["password"].as<const char*>() : "";
+    if (!doc["password"].isNull() && !doc["password"].is<const char*>()) return error(400, "Ungueltiges Passwort");
+
+    const size_t ssid_length = std::strlen(ssid);
+    const size_t password_length = std::strlen(password);
+    if (ssid_length < 1 || ssid_length > static_cast<size_t>(kMaxSsidBytes) || !printable(ssid)) {
+        return error(400, "WLAN-Name muss 1 bis 32 Zeichen haben");
+    }
+    if (password_length != 0 &&
+        (password_length < static_cast<size_t>(kMinPasswordBytes) || password_length > static_cast<size_t>(kMaxPasswordBytes))) {
+        return error(400, "Passwort muss 8 bis 63 Zeichen haben (oder leer sein)");
+    }
+    if (!printable(password)) return error(400, "Ungueltiges Passwort");
+    if (!network.saveNetwork(ssid, password)) return error(500, "Speichern fehlgeschlagen");
+    JsonDocument answer;
+    answer["ok"] = true;
+    return json(200, answer);
+}
+
 } // namespace
 
-ApiResponse handleApi(Session& session, const ApiRequest& request) {
+ApiResponse handleApi(Session& session, const ApiRequest& request, NetworkControl* network) {
     const std::string& path = request.path;
     const std::string& method = request.method;
     if (request.body.size() > kMaxApiBodyBytes) return error(413, "Anfrage zu gross");
@@ -130,6 +185,17 @@ ApiResponse handleApi(Session& session, const ApiRequest& request) {
     if (path == "/api/settings") {
         if (method == "GET") return raw(bagToJson(session.app().bag()));
         if (method == "PUT") return putSettings(session, request.body);
+        return methodNotAllowed();
+    }
+    if (path == "/api/wifi" && network != nullptr) {
+        if (method == "GET") return getWifi(*network);
+        if (method == "PUT") return putWifi(*network, request.body);
+        if (method == "DELETE") {
+            if (!network->forgetNetwork()) return error(500, "Speichern fehlgeschlagen");
+            JsonDocument doc;
+            doc["ok"] = true;
+            return json(200, doc);
+        }
         return methodNotAllowed();
     }
     if (path.compare(0, 12, "/api/rounds/") == 0) {

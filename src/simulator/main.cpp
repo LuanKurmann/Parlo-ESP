@@ -37,6 +37,8 @@
 //                 next / prev      naechste bzw. vorherige Ansicht (ohne Touch)
 //                 shot:datei.bmp   Screenshot speichern
 //                 rawshot:datei.bmp  Screenshot ohne runde Maske (fuer Tests)
+//                 net:hotspot / net:connecting / net:connected / net:off
+//                                  Zustand des simulierten WLANs setzen
 //                 play:60          mit --replay: 60 Sekunden der Aufzeichnung abspielen
 //
 // Beispiel: program --headless --do "b1,b1,pos:218,shot:distanz.bmp"
@@ -66,6 +68,32 @@
 #include "ui/ui.h"
 
 namespace {
+
+// Simuliertes WLAN: merkt sich nur, was das Handy einstellt.
+class FakeNetwork : public golf::NetworkControl {
+public:
+    golf::NetStatus current;
+    std::string saved_ssid;
+
+    void set(golf::NetMode mode, const char* ssid, const char* address) {
+        current.mode = mode;
+        std::snprintf(current.ssid, sizeof(current.ssid), "%s", ssid);
+        std::snprintf(current.address, sizeof(current.address), "%s", address);
+    }
+    golf::NetStatus status() const override { return current; }
+    bool saveNetwork(const char* ssid, const char*) override {
+        saved_ssid = ssid;
+        current.has_saved_network = true;
+        set(golf::NetMode::Connected, ssid, current.address);
+        return true;
+    }
+    bool forgetNetwork() override {
+        saved_ssid.clear();
+        current.has_saved_network = false;
+        set(golf::NetMode::Hotspot, "Golf-Tracker", current.address);
+        return true;
+    }
+};
 
 // Laesst LVGL `ms` Millisekunden lang arbeiten (Eingaben, Timer, Zeichnen).
 void pump(uint32_t ms) {
@@ -122,6 +150,7 @@ struct Simulator {
     std::unique_ptr<golf::PosixFileSystem> fs;
     std::unique_ptr<golf::Session> session;
     ScriptPointer pointer;
+    FakeNetwork network;
     std::unique_ptr<golf::GpsFeed> feed;   // nur bei --replay
     std::unique_ptr<golf::NmeaLog> track;
     uint32_t track_ms = 0;                 // Zeit innerhalb der Aufzeichnung
@@ -146,6 +175,7 @@ struct Simulator {
 
     // Uebertraegt die simulierte Position in die App und sichert den Stand.
     void apply() {
+        app().setNetStatus(network.status());
         if (track) { // die Position kommt aus der Aufzeichnung
             session->sync();
             golf::ui::refresh();
@@ -200,6 +230,14 @@ struct Simulator {
         } else if (command.compare(0, 5, "wait:") == 0) {
             apply();
             pump(static_cast<uint32_t>(std::atoi(command.c_str() + 5)));
+        } else if (command == "net:hotspot") {
+            network.set(golf::NetMode::Hotspot, "Golf-Tracker", "192.168.4.1");
+        } else if (command == "net:connecting") {
+            network.set(golf::NetMode::Connecting, "Heimnetz", "");
+        } else if (command == "net:connected") {
+            network.set(golf::NetMode::Connected, "Heimnetz", "192.168.1.57");
+        } else if (command == "net:off") {
+            network.set(golf::NetMode::Off, "", "");
         } else if (command == "next") {
             app().swipe(1);
         } else if (command == "prev") {
@@ -347,6 +385,9 @@ int main(int argc, char** argv) {
             std::fprintf(stderr, "Port %d laesst sich nicht oeffnen\n", serve_port);
             return 1;
         }
+        char address[40];
+        std::snprintf(address, sizeof(address), "127.0.0.1:%d", serve_port);
+        simulator.network.set(golf::NetMode::Hotspot, "Golf-Tracker", address);
         std::printf("Web-Oberflaeche: http://127.0.0.1:%d/\n", serve_port);
         std::fflush(stdout);
     }
@@ -354,7 +395,7 @@ int main(int argc, char** argv) {
     if (!simulator.runAll(commands)) return 1;
     if (headless && serve_port > 0) {
         for (;;) { // als Server weiterlaufen, bis der Prozess beendet wird
-            if (server.poll(*simulator.session)) golf::ui::refresh();
+            if (server.poll(*simulator.session, &simulator.network)) simulator.apply();
             lv_timer_handler();
             SDL_Delay(5);
         }
@@ -388,7 +429,7 @@ int main(int argc, char** argv) {
             next_play_at = now + static_cast<uint32_t>(1000.0 / speed);
         }
 
-        if (serve_port > 0) server.poll(*simulator.session);
+        if (serve_port > 0) server.poll(*simulator.session, &simulator.network);
         simulator.apply();
         SDL_Delay(5);
     }

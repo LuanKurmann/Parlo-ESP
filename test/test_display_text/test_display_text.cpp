@@ -521,6 +521,63 @@ static void test_every_message_has_a_text() {
     TEST_ASSERT_EQUAL_STRING("Grünmitte gespeichert", messageText(Message::GreenMarked));
 }
 
+// ---------- Mit Handy verbinden ----------
+
+static NetStatus net(NetMode mode, const char* ssid, const char* address) {
+    NetStatus status;
+    status.mode = mode;
+    std::snprintf(status.ssid, sizeof(status.ssid), "%s", ssid);
+    std::snprintf(status.address, sizeof(status.address), "%s", address);
+    return status;
+}
+
+static void test_phone_text_while_starting() {
+    App app(makeCourse());
+    const PhoneText t = phoneText(app);
+    TEST_ASSERT_EQUAL_STRING("WLAN wird gestartet ...", t.line1);
+    TEST_ASSERT_EQUAL_STRING("", t.value1);
+    TEST_ASSERT_EQUAL_STRING("", t.value2);
+    TEST_ASSERT_EQUAL_STRING("Knopf drücken zum Beenden", t.hint);
+}
+
+static void test_phone_text_hotspot() {
+    App app(makeCourse());
+    app.setNetStatus(net(NetMode::Hotspot, "Golf-Tracker", "192.168.4.1"));
+    const PhoneText t = phoneText(app);
+    TEST_ASSERT_EQUAL_STRING("Am Handy dieses WLAN wählen:", t.line1);
+    TEST_ASSERT_EQUAL_STRING("Golf-Tracker", t.value1);
+    TEST_ASSERT_EQUAL_STRING("Dann im Browser öffnen:", t.line2);
+    TEST_ASSERT_EQUAL_STRING("192.168.4.1", t.value2);
+}
+
+static void test_phone_text_connecting_and_connected() {
+    App app(makeCourse());
+    app.setNetStatus(net(NetMode::Connecting, "Heimnetz", ""));
+    PhoneText t = phoneText(app);
+    TEST_ASSERT_EQUAL_STRING("Verbinde mit WLAN", t.line1);
+    TEST_ASSERT_EQUAL_STRING("Heimnetz", t.value1);
+    TEST_ASSERT_EQUAL_STRING("", t.line2);
+
+    app.setNetStatus(net(NetMode::Connected, "Heimnetz", "192.168.1.57"));
+    t = phoneText(app);
+    TEST_ASSERT_EQUAL_STRING("Verbunden mit WLAN", t.line1);
+    TEST_ASSERT_EQUAL_STRING("Am Handy im Browser öffnen:", t.line2);
+    TEST_ASSERT_EQUAL_STRING("192.168.1.57", t.value2);
+}
+
+static void test_phone_text_with_longest_names() {
+    App app(makeCourse());
+    app.setNetStatus(net(NetMode::Connected, "12345678901234567890123456789012", "fe80:0000:0000:0000:0202:b3ff:fe1e:8329"));
+    const PhoneText t = phoneText(app);
+    TEST_ASSERT_EQUAL_STRING("12345678901234567890123456789012", t.value1); // 32 Zeichen
+    TEST_ASSERT_EQUAL_STRING("fe80:0000:0000:0000:0202:b3ff:fe1e:8329", t.value2);
+}
+
+static void test_menu_has_phone_entry() {
+    TEST_ASSERT_EQUAL_STRING("Mit Handy verbinden", menuItemText(MenuItem::Phone));
+    TEST_ASSERT_EQUAL_INT(5, kMenuItemCount);
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(test_tee_of_first_hole);
@@ -558,5 +615,10 @@ int main() {
     RUN_TEST(test_round_summary_under_par_and_without_par);
     RUN_TEST(test_longest_possible_texts_fit_their_buffers);
     RUN_TEST(test_every_message_has_a_text);
+    RUN_TEST(test_phone_text_while_starting);
+    RUN_TEST(test_phone_text_hotspot);
+    RUN_TEST(test_phone_text_connecting_and_connected);
+    RUN_TEST(test_phone_text_with_longest_names);
+    RUN_TEST(test_menu_has_phone_entry);
     return UNITY_END();
 }

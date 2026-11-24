@@ -11,6 +11,9 @@
 //   DELETE /api/rounds/<nr>   eine archivierte Runde loeschen
 //   GET    /api/settings      Schlagweiten pro Schlaeger
 //   PUT    /api/settings      Schlagweiten setzen
+//   GET    /api/wifi          WLAN-Zustand des Geraets (nie das Passwort)
+//   PUT    /api/wifi          WLAN merken: {"ssid":"...","password":"..."}
+//   DELETE /api/wifi          gespeichertes WLAN vergessen
 //
 // Alle Inhalte sind JSON in den Formaten aus serialize.h. Fehler kommen als
 // {"error":"..."} mit passendem Statuscode.
@@ -37,6 +40,7 @@ struct ApiResponse {
     std::string body;
 };
 
-ApiResponse handleApi(Session& session, const ApiRequest& request);
+// `network` darf fehlen; dann gibt es /api/wifi nicht (404).
+ApiResponse handleApi(Session& session, const ApiRequest& request, NetworkControl* network = nullptr);
 
 } // namespace golf

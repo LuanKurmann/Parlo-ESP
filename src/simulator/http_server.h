@@ -5,6 +5,7 @@
 
 #include <string>
 
+#include "core/network.h"
 #include "core/session.h"
 
 namespace sim {
@@ -18,10 +19,10 @@ public:
 
     // Bearbeitet wartende Anfragen, ohne zu blockieren. Liefert true, wenn
     // eine Anfrage den Zustand veraendert haben koennte.
-    bool poll(golf::Session& session);
+    bool poll(golf::Session& session, golf::NetworkControl* network = nullptr);
 
 private:
-    void handleClient(int client, golf::Session& session, bool& changed);
+    void handleClient(int client, golf::Session& session, golf::NetworkControl* network, bool& changed);
 
     int listener_ = -1;
     std::string web_dir_;

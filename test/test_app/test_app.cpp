@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <unity.h>
 
 #include "../test_support.h"
@@ -670,6 +671,65 @@ static void test_random_inputs_keep_state_consistent() {
     }
 }
 
+// ---------- Mit Handy verbinden ----------
+
+static void test_phone_screen_opens_from_menu_and_wants_wifi() {
+    App app(makeCourse());
+    TEST_ASSERT_FALSE(app.phoneWanted());
+    app.button2Long();
+    app.button2Short();
+    app.button2Short();
+    app.button2Short(); // vierter Eintrag
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(MenuItem::Phone), static_cast<int>(app.menuSelection()));
+    app.button1Short();
+    ASSERT_OVERLAY(Overlay::Phone, app);
+    TEST_ASSERT_TRUE(app.phoneWanted());
+}
+
+static void openPhone(App& app) {
+    app.button2Long();
+    app.selectMenuItem(MenuItem::Phone);
+}
+
+static void test_phone_screen_closes_on_any_short_press_or_tap() {
+    for (int way = 0; way < 3; way++) {
+        App app(makeCourse());
+        hit(app, 0.0);
+        openPhone(app);
+        if (way == 0) app.button1Short();
+        if (way == 1) app.button2Short();
+        if (way == 2) app.tap();
+        ASSERT_OVERLAY(Overlay::None, app);
+        TEST_ASSERT_FALSE(app.phoneWanted());
+        TEST_ASSERT_EQUAL_INT(1, app.round().shotCount(0)); // kein Schlag gezaehlt, kein Loch abgeschlossen
+        TEST_ASSERT_FALSE(app.round().isFinished(0));
+    }
+}
+
+static void test_phone_screen_ignores_long_presses_and_swipes() {
+    App app(makeCourse());
+    hit(app, 0.0);
+    openPhone(app);
+    app.button1Long();
+    app.button2Long();
+    app.swipe(1);
+    app.selectClub(Club::Putter);
+    ASSERT_OVERLAY(Overlay::Phone, app);
+    ASSERT_VIEW(View::Distance, app);
+    TEST_ASSERT_EQUAL_INT(1, app.round().shotCount(0));
+}
+
+static void test_net_status_is_kept_for_display() {
+    App app(makeCourse());
+    TEST_ASSERT_TRUE(app.netStatus().mode == NetMode::Off);
+    NetStatus status;
+    status.mode = NetMode::Hotspot;
+    std::snprintf(status.ssid, sizeof(status.ssid), "Golf-Tracker");
+    app.setNetStatus(status);
+    TEST_ASSERT_TRUE(app.netStatus().mode == NetMode::Hotspot);
+    TEST_ASSERT_EQUAL_STRING("Golf-Tracker", app.netStatus().ssid);
+}
+
 int main() {
     UNITY_BEGIN();
     RUN_TEST(test_starts_on_hole_one_distance_view);
@@ -719,5 +779,9 @@ int main() {
     RUN_TEST(test_dispatch_button_events);
     RUN_TEST(test_real_button_timing_drives_the_app);
     RUN_TEST(test_random_inputs_keep_state_consistent);
+    RUN_TEST(test_phone_screen_opens_from_menu_and_wants_wifi);
+    RUN_TEST(test_phone_screen_closes_on_any_short_press_or_tap);
+    RUN_TEST(test_phone_screen_ignores_long_presses_and_swipes);
+    RUN_TEST(test_net_status_is_kept_for_display);
     return UNITY_END();
 }

@@ -44,6 +44,13 @@ private:
     lv_obj_t* summary_line_ = nullptr;
     lv_obj_t* summary_detail_ = nullptr;
     lv_obj_t* summary_hint_ = nullptr;
+
+    lv_obj_t* phone_ = nullptr;
+    lv_obj_t* phone_line1_ = nullptr;
+    lv_obj_t* phone_value1_ = nullptr;
+    lv_obj_t* phone_line2_ = nullptr;
+    lv_obj_t* phone_value2_ = nullptr;
+    lv_obj_t* phone_hint_ = nullptr;
 };
 
 } // namespace ui
