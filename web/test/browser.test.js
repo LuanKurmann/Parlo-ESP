@@ -23,7 +23,8 @@ const PLAY = [
   'B2,b2,b2,b1,B1',                                                                  // Runde beenden, neue Runde
   'b1,b1,pos:230,b1,b1,pos:338,b1,b1,b2,b2',                                         // Runde 2, Loch 1: 3 Schlaege
   'B2,b2,b2,b1,B1',
-  'b1,b1'                                                                            // Runde 3 laeuft
+  'b1,b1',                                                                           // Runde 3 laeuft
+  'bat:charging:64'
 ].join(',');
 
 let server, browser, baseUrl, dataDir;
@@ -85,7 +86,7 @@ test('Uebersicht zeigt laufende Runde, Archiv und Schlagweiten', async () => {
   const page = await newPage();
   await page.goto(baseUrl + '/');
   await page.waitForSelector('#round-list .list-item');
-  assert.match(await page.textContent('#status'), /Verbunden · Version 0\.1\.0/);
+  assert.match(await page.textContent('#status'), /Verbunden · Version 0\.1\.0 · Akku 64 % \(lädt\)/);
   assert.match(await page.textContent('#current-round'), /Beispielplatz · Loch 1/);
 
   const items = page.locator('#round-list .list-item');

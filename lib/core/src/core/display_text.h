@@ -105,6 +105,14 @@ struct PhoneText {
 
 PhoneText phoneText(const App& app);
 
+// Akkuanzeige oben im Display: "87 %", "lädt 87 %" oder leer, wenn unbekannt.
+struct BatteryText {
+    char text[16];
+    bool low; // 20 % oder weniger und nicht am Laden
+};
+
+BatteryText batteryText(const App& app);
+
 // Text einer Rueckmeldung, leer fuer Message::None.
 const char* messageText(Message message);
 

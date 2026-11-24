@@ -7,11 +7,13 @@
 #include <Wire.h>
 #include <lvgl.h>
 
+#include "battery.h"
 #include "board.h"
 #include "core/app_info.h"
 #include "core/button.h"
 #include "core/gps_feed.h"
 #include "core/lc76g.h"
+#include "core/power.h"
 #include "core/session.h"
 #include "display.h"
 #include "net.h"
@@ -23,12 +25,17 @@ namespace {
 
 constexpr uint32_t kUiRefreshMs = 100;
 constexpr uint32_t kPwrPollMs = 20;
+constexpr uint32_t kBatteryPollMs = 10000;
 
 device::FlashFileSystem storage;
 device::Net net;
 WireBus i2c;
 golf::Lc76gReader gps_reader(i2c);
 golf::Button button1, button2;
+golf::ScreenPower screen_power;
+uint8_t shown_brightness = 255;
+uint32_t last_battery_poll_ms = 0;
+bool battery_ok = false;
 
 // Gross; deshalb auf dem Heap statt auf dem Stack der Hauptschleife.
 golf::Session* session = nullptr;
@@ -41,6 +48,8 @@ uint32_t last_input_count = 0;
 std::string gps_chunk;
 
 uint32_t tickMs() { return millis(); }
+
+bool touchGate(bool pressed) { return screen_power.onTouch(pressed, millis()); }
 
 // Der PWR-Knopf haengt am I/O-Baustein: Bit 4 des Eingangsregisters, 1 = gedrueckt.
 bool readPwrButton() {
@@ -65,8 +74,10 @@ void setup() {
     const bool display_ok = device::displayBegin();
     const bool touch_ok = display_ok && device::touchBegin();
     const bool storage_ok = storage.begin();
-    Serial.printf("Display %s, Touch %s, Speicher %s\n", display_ok ? "ok" : "FEHLT", touch_ok ? "ok" : "FEHLT",
-                  storage_ok ? "ok" : "FEHLT");
+    battery_ok = device::batteryBegin();
+    device::touchSetGate(touchGate);
+    Serial.printf("Display %s, Touch %s, Speicher %s, Akku-Chip %s\n", display_ok ? "ok" : "FEHLT",
+                  touch_ok ? "ok" : "FEHLT", storage_ok ? "ok" : "FEHLT", battery_ok ? "ok" : "FEHLT");
 
     session = new golf::Session(storage);
     gps_feed = new golf::GpsFeed(*session);
@@ -83,8 +94,20 @@ void loop() {
         last_pwr_poll_ms = now;
         pwr_pressed = readPwrButton();
     }
-    golf::dispatchButton(app, 1, button1.update(digitalRead(board::kBootButton) == LOW, now));
-    golf::dispatchButton(app, 2, button2.update(pwr_pressed, now));
+    // Ist das Display aus, weckt ein Knopf es nur.
+    golf::dispatchButton(app, screen_power, 1, button1.update(digitalRead(board::kBootButton) == LOW, now), now);
+    golf::dispatchButton(app, screen_power, 2, button2.update(pwr_pressed, now), now);
+
+    screen_power.tick(now, app.phoneWanted());
+    if (screen_power.brightness() != shown_brightness) {
+        shown_brightness = screen_power.brightness();
+        device::displaySetBrightness(shown_brightness);
+    }
+
+    if (battery_ok && now - last_battery_poll_ms >= kBatteryPollMs) {
+        last_battery_poll_ms = now;
+        app.setBattery(device::batteryRead());
+    }
 
     if (gps_reader.poll(now, gps_chunk)) gps_feed->feed(gps_chunk.data(), gps_chunk.size(), now);
     gps_feed->tick(now);

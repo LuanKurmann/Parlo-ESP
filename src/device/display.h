@@ -12,6 +12,10 @@ bool displayBegin();
 // Helligkeit 0 bis 255.
 void displaySetBrightness(uint8_t value);
 
+// Wird bei jeder Touch-Abfrage gefragt, ob die Beruehrung an die Oberflaeche
+// weitergehen darf (Display aus: erste Beruehrung weckt nur).
+void touchSetGate(bool (*gate)(bool pressed));
+
 // Startet den Touch-Controller und meldet ihn bei LVGL an. Voraussetzung:
 // Wire laeuft und displayBegin() war erfolgreich.
 bool touchBegin();

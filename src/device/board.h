@@ -36,6 +36,9 @@ constexpr uint8_t kExpanderInputRegister = 0x00;
 constexpr uint8_t kExpanderPwrButtonBit = 4; // EXIO4, 1 = gedrueckt
 constexpr uint8_t kExpanderGpsResetBit = 7;  // EXIO7, bleibt unangetastet
 
+// Stromversorgung und Akku: AXP2101
+constexpr uint8_t kPmuAddress = 0x34;
+
 // Knopf BOOT direkt am Prozessor, 0 = gedrueckt
 constexpr int kBootButton = 0;
 

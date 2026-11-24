@@ -158,6 +158,9 @@ static void test_full_round_with_realistic_gps_noise() {
 
         char msg[48];
         std::snprintf(msg, sizeof(msg), "Loch %d", h + 1);
+        // Auch nach dem langen Weg zum naechsten Abschlag ist das Display nie
+        // ganz aus; sonst wuerde ein Schlag nur wecken statt zaehlen.
+        TEST_ASSERT_TRUE_MESSAGE(s.power().state() != ScreenState::Off, msg);
         TEST_ASSERT_EQUAL_INT_MESSAGE(count + putts, s.app().round().shotCount(h), msg);
         TEST_ASSERT_EQUAL_INT_MESSAGE(putts, s.app().round().putts(h), msg);
         TEST_ASSERT_TRUE_MESSAGE(s.app().round().isFinished(h), msg);

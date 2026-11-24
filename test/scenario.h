@@ -11,6 +11,7 @@
 #include "core/demo_course.h"
 #include "core/gps_feed.h"
 #include "core/nmea_writer.h"
+#include "core/power.h"
 #include "core/session.h"
 #include "memory_fs.h"
 
@@ -23,6 +24,7 @@ public:
     golf::App& app() { return session_->app(); }
     golf::Session& session() { return *session_; }
     golf::GpsFeed& feed() { return *feed_; }
+    golf::ScreenPower& power() { return power_; }
     const golf::LatLon& truePosition() const { return true_position_; }
 
     // ---------- Umgebung ----------
@@ -48,8 +50,10 @@ public:
     void advance(uint32_t ms, bool button1 = false, bool button2 = false) {
         for (uint32_t elapsed = 0; elapsed < ms; elapsed += 5) {
             if (now_ms_ % 1000 == 0) emitBurst();
-            golf::dispatchButton(app(), 1, b1_.update(button1, now_ms_));
-            golf::dispatchButton(app(), 2, b2_.update(button2, now_ms_));
+            // Wie in der Firmware: Ist das Display aus, weckt ein Knopf es nur.
+            golf::dispatchButton(app(), power_, 1, b1_.update(button1, now_ms_), now_ms_);
+            golf::dispatchButton(app(), power_, 2, b2_.update(button2, now_ms_), now_ms_);
+            power_.tick(now_ms_, app().phoneWanted());
             feed_->tick(now_ms_);
             if (!session_->sync()) failed_syncs_++;
             now_ms_ += 5;
@@ -86,6 +90,7 @@ private:
         feed_.reset(new golf::GpsFeed(*session_));
         b1_ = golf::Button();
         b2_ = golf::Button();
+        power_ = golf::ScreenPower();
     }
 
     void press(bool button1, bool button2, uint32_t ms) {
@@ -136,6 +141,7 @@ private:
     std::unique_ptr<golf::Session> session_;
     std::unique_ptr<golf::GpsFeed> feed_;
     golf::Button b1_, b2_;
+    golf::ScreenPower power_;
     uint32_t now_ms_ = 0;
     golf::LatLon true_position_{47.3769, 8.5417};
     int failed_syncs_ = 0;

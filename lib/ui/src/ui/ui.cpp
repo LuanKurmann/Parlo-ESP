@@ -1,5 +1,7 @@
 #include "ui/ui.h"
 
+#include <cstring>
+
 #include <lvgl.h>
 
 #include "core/display_text.h"
@@ -25,6 +27,9 @@ lv_obj_t* g_views[kViewCount] = {};
 lv_obj_t* g_dots[kViewCount] = {};
 lv_obj_t* g_dot_row = nullptr;
 int g_shown_view = -1;
+
+lv_obj_t* g_battery = nullptr;
+BatteryText g_shown_battery{};
 
 lv_obj_t* g_toast = nullptr;
 lv_obj_t* g_toast_label = nullptr;
@@ -100,6 +105,11 @@ void init(App& app) {
         lv_obj_set_style_bg_opa(g_dots[i], LV_OPA_COVER, 0);
     }
 
+    // Akkustand ganz oben, kleiner als alles andere; die Overlays decken ihn ab.
+    g_battery = makeLabel(screen, &golf_font_text_16, kColorMuted);
+    lv_obj_align(g_battery, LV_ALIGN_TOP_MID, 0, 14);
+    g_shown_battery = BatteryText{};
+
     g_overlays = Overlays();
     g_overlays.create(screen, app, refresh);
 
@@ -144,6 +154,12 @@ void refresh() {
         case View::Distance: g_distance.show(distanceScreenText(app)); break;
         case View::Shots: g_shots.show(shotsScreenText(app)); break;
         case View::Scorecard: g_scorecard.show(scorecardText(app)); break;
+    }
+    const BatteryText battery = batteryText(app);
+    if (std::memcmp(&battery, &g_shown_battery, sizeof(battery)) != 0) {
+        g_shown_battery = battery;
+        lv_label_set_text(g_battery, battery.text);
+        lv_obj_set_style_text_color(g_battery, color(battery.low ? kColorWarning : kColorMuted), 0);
     }
     g_overlays.show(app);
 

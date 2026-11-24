@@ -91,6 +91,20 @@ static void test_status() {
     TEST_ASSERT_TRUE(doc["storage_ok"].as<bool>());
 }
 
+static void test_status_reports_battery_only_when_known() {
+    Rig rig;
+    JsonDocument doc = parse(rig.call("GET", "/api/status"));
+    TEST_ASSERT_TRUE(doc["battery"].isNull());
+    BatteryInfo battery;
+    battery.known = true;
+    battery.percent = 64;
+    battery.charging = true;
+    rig.app().setBattery(battery);
+    doc = parse(rig.call("GET", "/api/status"));
+    TEST_ASSERT_EQUAL_INT(64, doc["battery"].as<int>());
+    TEST_ASSERT_TRUE(doc["charging"].as<bool>());
+}
+
 static void test_status_reports_storage_trouble() {
     Rig rig;
     rig.fs.read_only = true;
@@ -594,6 +608,7 @@ static void test_wifi_storage_failure_and_wrong_method() {
 int main() {
     UNITY_BEGIN();
     RUN_TEST(test_status);
+    RUN_TEST(test_status_reports_battery_only_when_known);
     RUN_TEST(test_status_reports_storage_trouble);
     RUN_TEST(test_unknown_paths_and_methods);
     RUN_TEST(test_oversized_body_is_refused_before_anything_else);

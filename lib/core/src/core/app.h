@@ -32,7 +32,17 @@ enum class Message : uint8_t {
     NoGpsForGreen,    // Gruen markieren ohne GPS-Empfang
     AlreadyFirstHole,
     NewRoundStarted,
+    BatteryLow,
 };
+
+// Akkustand, wie ihn die Stromversorgung meldet.
+struct BatteryInfo {
+    bool known = false; // false, solange nichts gemessen wurde oder kein Akku angeschlossen ist
+    int percent = 0;    // 0 bis 100
+    bool charging = false;
+};
+
+constexpr int kBatteryLowPercent = 15;
 
 class App {
 public:
@@ -78,6 +88,11 @@ public:
     bool phoneWanted() const { return overlay_ == Overlay::Phone; }
     void setNetStatus(const NetStatus& status) { net_status_ = status; }
     const NetStatus& netStatus() const { return net_status_; }
+
+    // Aktueller Akkustand. Faellt er im Betrieb auf 15 % oder darunter, gibt es
+    // einmal die Rueckmeldung BatteryLow (erneut erst nach dem Laden).
+    void setBattery(const BatteryInfo& battery);
+    const BatteryInfo& battery() const { return battery_; }
 
     // Liefert die anstehende Rueckmeldung und loescht sie.
     Message takeMessage();
@@ -137,6 +152,8 @@ private:
     bool has_position_ = false;
     LatLon position_{0.0, 0.0};
     NetStatus net_status_;
+    BatteryInfo battery_;
+    bool battery_low_reported_ = false;
 };
 
 // Leitet ein Knopf-Ereignis an die App weiter. button ist 1 oder 2.

@@ -423,7 +423,8 @@
 
   function loadStatus() {
     return api('GET', '/api/status').then(function (status) {
-      $('status').textContent = 'Verbunden · Version ' + status.version + (status.storage_ok ? '' : ' · Achtung: Speicher meldet Fehler');
+      var battery = status.battery === undefined ? '' : ' · Akku ' + status.battery + ' %' + (status.charging ? ' (lädt)' : '');
+      $('status').textContent = 'Verbunden · Version ' + status.version + battery + (status.storage_ok ? '' : ' · Achtung: Speicher meldet Fehler');
     });
   }
 

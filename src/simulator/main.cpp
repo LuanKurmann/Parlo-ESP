@@ -39,6 +39,7 @@
 //                 rawshot:datei.bmp  Screenshot ohne runde Maske (fuer Tests)
 //                 net:hotspot / net:connecting / net:connected / net:off
 //                                  Zustand des simulierten WLANs setzen
+//                 bat:87 / bat:charging:50 / bat:none   Akkustand setzen
 //                 play:60          mit --replay: 60 Sekunden der Aufzeichnung abspielen
 //
 // Beispiel: program --headless --do "b1,b1,pos:218,shot:distanz.bmp"
@@ -58,6 +59,7 @@
 #include "core/app_info.h"
 #include "core/button.h"
 #include "core/posix_fs.h"
+#include "core/power.h"
 #include "core/session.h"
 #include "core/demo_course.h"
 #include "core/gps_feed.h"
@@ -240,6 +242,15 @@ struct Simulator {
             network.set(golf::NetMode::Connected, "Heimnetz", "192.168.1.57");
         } else if (command == "net:off") {
             network.set(golf::NetMode::Off, "", "");
+        } else if (command.compare(0, 4, "bat:") == 0) {
+            golf::BatteryInfo battery;
+            const std::string value = command.substr(4);
+            if (value != "none") {
+                battery.known = true;
+                battery.charging = value.compare(0, 9, "charging:") == 0;
+                battery.percent = std::atoi(value.c_str() + (battery.charging ? 9 : 0));
+            }
+            app().setBattery(battery);
         } else if (command == "next") {
             app().swipe(1);
         } else if (command == "prev") {
@@ -287,6 +298,18 @@ void addRoundBezel() {
     lv_obj_set_style_border_color(ring, lv_color_hex(0x23282A), 0);
     lv_obj_set_style_border_opa(ring, LV_OPA_COVER, 0);
     lv_obj_remove_flag(ring, LV_OBJ_FLAG_CLICKABLE);
+}
+
+// Zeigt Dimmen und Abschalten des Displays im Fenster als dunklen Schleier.
+lv_obj_t* addDimVeil() {
+    lv_obj_t* veil = lv_obj_create(lv_layer_top());
+    lv_obj_remove_style_all(veil);
+    lv_obj_set_size(veil, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_style_bg_color(veil, lv_color_black(), 0);
+    lv_obj_set_style_bg_opa(veil, LV_OPA_TRANSP, 0);
+    lv_obj_remove_flag(veil, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_move_background(veil); // unter den Gehaeusering
+    return veil;
 }
 
 // Liefert true genau in dem Durchlauf, in dem die Taste neu gedrueckt wurde.
@@ -408,6 +431,9 @@ int main(int argc, char** argv) {
     }
 
     golf::Button button1, button2;
+    golf::ScreenPower power;
+    lv_obj_t* veil = addDimVeil();
+    golf::ScreenState shown_state = golf::ScreenState::Active;
     bool g_down = false, s_down = false, left_down = false, right_down = false;
     uint32_t next_play_at = SDL_GetTicks();
     for (;;) {
@@ -415,8 +441,17 @@ int main(int argc, char** argv) {
         const Uint8* keys = SDL_GetKeyboardState(nullptr);
         const uint32_t now = SDL_GetTicks();
 
-        golf::dispatchButton(simulator.app(), 1, button1.update(keys[SDL_SCANCODE_1] != 0, now));
-        golf::dispatchButton(simulator.app(), 2, button2.update(keys[SDL_SCANCODE_2] != 0, now));
+        // Wie auf dem Geraet: Ist das Display aus, weckt ein Knopf es nur.
+        golf::dispatchButton(simulator.app(), power, 1, button1.update(keys[SDL_SCANCODE_1] != 0, now), now);
+        golf::dispatchButton(simulator.app(), power, 2, button2.update(keys[SDL_SCANCODE_2] != 0, now), now);
+        int mouse_x = 0, mouse_y = 0;
+        if (SDL_GetMouseState(&mouse_x, &mouse_y) & SDL_BUTTON(SDL_BUTTON_LEFT)) power.onInput(now);
+        power.tick(now, simulator.app().phoneWanted());
+        if (power.state() != shown_state) {
+            shown_state = power.state();
+            lv_obj_set_style_bg_opa(veil, shown_state == golf::ScreenState::Active ? LV_OPA_TRANSP
+                                          : shown_state == golf::ScreenState::Dim ? LV_OPA_60 : LV_OPA_COVER, 0);
+        }
 
         if (keys[SDL_SCANCODE_UP]) simulator.progress_m += 0.4;
         if (keys[SDL_SCANCODE_DOWN]) simulator.progress_m -= 0.4;

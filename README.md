@@ -122,8 +122,9 @@ der Web-Oberfläche lässt sich das eigene WLAN eintragen.
 
 ## Stand
 
-Schritt 11 von 13: Kern, Oberfläche und Handy-Verbindung sind fertig und
-getestet. Die Gerätetreiber (Display, Touch, Knöpfe, GPS, Speicher, WLAN) sind
-eingebunden und kompilieren, sind aber noch nie auf dem Board gelaufen. Wie
-die Inbetriebnahme abläuft und welche Annahmen dahinterstehen, steht in
+Schritte 1 bis 11 und der hardwareunabhängige Teil von Schritt 13 sind fertig:
+Kern, Oberfläche, Handy-Verbindung, Akkuanzeige und Display-Stromsparen sind
+getestet. Die Gerätetreiber (Display, Touch, Knöpfe, GPS, Speicher, WLAN, Akku)
+sind eingebunden und kompilieren, sind aber noch nie auf dem Board gelaufen.
+Offen ist Schritt 12, die Inbetriebnahme am Gerät: siehe
 [docs/inbetriebnahme.md](docs/inbetriebnahme.md).

@@ -273,6 +273,16 @@ PhoneText phoneText(const App& app) {
     return t;
 }
 
+BatteryText batteryText(const App& app) {
+    BatteryText t;
+    std::memset(&t, 0, sizeof(t));
+    const BatteryInfo& b = app.battery();
+    if (!b.known) return t;
+    std::snprintf(t.text, sizeof(t.text), b.charging ? "lädt %d %%" : "%d %%", b.percent);
+    t.low = !b.charging && b.percent <= 20;
+    return t;
+}
+
 const char* messageText(Message message) {
     switch (message) {
         case Message::None: return "";
@@ -284,6 +294,7 @@ const char* messageText(Message message) {
         case Message::NoGpsForGreen: return "Kein GPS: Grün nicht markiert";
         case Message::AlreadyFirstHole: return "Du bist auf Loch 1";
         case Message::NewRoundStarted: return "Neue Runde gestartet";
+        case Message::BatteryLow: return "Akku fast leer";
     }
     return "";
 }

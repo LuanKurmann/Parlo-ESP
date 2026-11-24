@@ -56,6 +56,10 @@ ApiResponse status(Session& session) {
     doc["current_hole"] = session.app().currentHole() + 1;
     doc["rounds"] = session.store().archivedRounds().size();
     doc["storage_ok"] = session.lastSyncOk();
+    if (session.app().battery().known) {
+        doc["battery"] = session.app().battery().percent;
+        doc["charging"] = session.app().battery().charging;
+    }
     return json(200, doc);
 }
 

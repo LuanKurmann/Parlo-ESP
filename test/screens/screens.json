@@ -6,6 +6,10 @@
     {"name": "distanz_kein_gps", "do": "b1,b1,pos:218,gps:off"},
     {"name": "distanz_auf_dem_gruen", "do": "pos:340"},
     {"name": "distanz_breiteste_zahlen", "do": "b1,b1,pos:-546"},
+    {"name": "distanz_akku", "do": "bat:87,b1,b1,pos:218"},
+    {"name": "distanz_akku_schwach", "do": "bat:18,wait:2200,b1,b1,pos:218"},
+    {"name": "distanz_akku_laedt", "do": "bat:charging:100,next"},
+    {"name": "einblendung_akku_fast_leer", "do": "bat:15"},
     {"name": "distanz_gruen_unbekannt", "do": "b1,b1,pos:120", "args": ["--no-course"]},
 
     {"name": "schlaegerwahl_driver", "do": "b1"},

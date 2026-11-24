@@ -19,6 +19,7 @@ Arduino_DataBus* bus = nullptr;
 Arduino_CO5300* panel = nullptr;
 TouchDrvCST92xx touch;
 bool touch_ok = false;
+bool (*touch_gate)(bool pressed) = nullptr;
 
 void flush(lv_display_t* display, const lv_area_t* area, uint8_t* pixels) {
     const int32_t width = area->x2 - area->x1 + 1;
@@ -39,7 +40,9 @@ void roundArea(lv_event_t* event) {
 
 void readTouch(lv_indev_t*, lv_indev_data_t* data) {
     int16_t x[1] = {0}, y[1] = {0};
-    if (touch_ok && touch.getPoint(x, y, 1) > 0) {
+    bool pressed = touch_ok && touch.getPoint(x, y, 1) > 0;
+    if (touch_gate != nullptr) pressed = touch_gate(pressed);
+    if (pressed) {
         data->point.x = x[0];
         data->point.y = y[0];
         data->state = LV_INDEV_STATE_PRESSED;
@@ -70,6 +73,8 @@ bool displayBegin() {
     lv_display_add_event_cb(display, roundArea, LV_EVENT_INVALIDATE_AREA, nullptr);
     return true;
 }
+
+void touchSetGate(bool (*gate)(bool pressed)) { touch_gate = gate; }
 
 void displaySetBrightness(uint8_t value) {
     if (panel != nullptr) panel->setBrightness(value);

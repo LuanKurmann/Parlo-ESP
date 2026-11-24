@@ -43,6 +43,26 @@ void App::setPosition(const LatLon& position) {
 
 void App::clearPosition() { has_position_ = false; }
 
+void App::setBattery(const BatteryInfo& battery) {
+    BatteryInfo b = battery;
+    if (b.percent < 0) b.percent = 0;
+    if (b.percent > 100) b.percent = 100;
+    battery_ = b;
+    if (!b.known) return;
+    const bool low = b.percent <= kBatteryLowPercent && !b.charging;
+    if (low && !battery_low_reported_) {
+        battery_low_reported_ = true;
+        // Eine anstehende andere Rueckmeldung nicht ueberschreiben; die Warnung kommt dann beim naechsten Mal.
+        if (message_ == Message::None) {
+            message_ = Message::BatteryLow;
+        } else {
+            battery_low_reported_ = false;
+        }
+    } else if (b.charging || b.percent > kBatteryLowPercent + 5) {
+        battery_low_reported_ = false; // nach dem Laden darf wieder gewarnt werden
+    }
+}
+
 Message App::takeMessage() {
     const Message m = message_;
     message_ = Message::None;

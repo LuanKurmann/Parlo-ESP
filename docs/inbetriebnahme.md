@@ -18,7 +18,7 @@ Nach dem Start meldet die Firmware auf der seriellen Schnittstelle:
 
 ```
 Golf-Tracker 0.1.0
-Display ok, Touch ok, Speicher ok
+Display ok, Touch ok, Speicher ok, Akku-Chip ok
 ```
 
 ## Annahmen über die Hardware
@@ -35,6 +35,7 @@ Repository `waveshareteam/ESP32-S3-Touch-AMOLED-1.75` (Datei `pin_config.h` und
 | Knopf 2 | PWR über den I/O-Baustein TCA9554 (0x20), Bit 4, gedrückt = 1 | laut Hersteller, ohne Beispielcode |
 | GPS | LC76G über I2C (0x50 schreiben, 0x54 lesen) | Ablauf aus dem Herstellerbeispiel nachgebaut |
 | Speicher | interner Flash mit LittleFS, nicht die SD-Karte | Standard des ESP32 |
+| Akku | AXP2101 an I2C-Adresse 0x34, gelesen mit XPowersLib | aus dem Herstellerbeispiel übernommen |
 | WLAN | Standardfunktionen des ESP32 | – |
 
 ## Reihenfolge der Prüfung
@@ -59,7 +60,11 @@ Jeden Punkt einzeln abhaken. Bei einem Fehler zuerst die serielle Ausgabe lesen.
 6. **Speicher:** Einen Schlag zählen, Gerät aus- und einschalten: Der Schlag ist noch da.
 7. **WLAN:** Menü → „Mit Handy verbinden“. Das Display zeigt WLAN-Name,
    Passwort und Adresse. Am Handy verbinden und die Adresse im Browser öffnen.
-8. **Platz laden:** Im Bereich „Gerät“ das eigene WLAN eintragen, „Mit Handy
+8. **Akku und Display:** Mit Akku steht oben der Ladestand, am USB-Kabel „lädt“.
+   Nach 20 Sekunden ohne Eingabe dimmt das Display, ein Knopfdruck macht es wieder hell.
+   - Dimmt nicht sichtbar: `setBrightness` wirkt beim CO5300 über Panel-Befehle;
+     Werte in `lib/core/src/core/power.h` anpassen (`kBrightnessDim`).
+9. **Platz laden:** Im Bereich „Gerät“ das eigene WLAN eintragen, „Mit Handy
    verbinden“ neu öffnen, dann im Bereich „Platz“ den Golfplatz suchen.
 
 ## GPS im Detail
@@ -77,6 +82,8 @@ GPIO17/GPIO18, die je nach Bestückung fehlen kann. Sie wird nicht verwendet.
 
 ## Bekannte Lücken
 
-- Kein Akkustand und kein Stromsparen (Display dimmen, Schlafmodus).
+- Stromsparen betrifft bisher nur das Display (dimmen nach 20 Sekunden, aus
+  nach 30 Minuten). Prozessor und GPS laufen durch; die Laufzeit mit Akku ist
+  noch nicht gemessen.
 - Die SD-Karte wird nicht benutzt.
 - Die Web-Oberfläche ist nicht passwortgeschützt; der eigene Hotspot schon.
