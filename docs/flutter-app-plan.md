@@ -26,7 +26,7 @@ erhalten, bekommt aber keine neuen Funktionen.
 - **Ohne Hardware testbar**, so weit es geht: Die App spricht in den Tests mit
   dem Simulator statt mit dem Gerät.
 - **Eine Schnittstelle:** Bluetooth überträgt dieselben Anfragen wie heute das
-  WLAN (`/api/...`). Die 35 Tests der Schnittstelle gelten damit weiter.
+  WLAN (`/api/...`). Die 36 Tests der Schnittstelle gelten damit weiter.
 - **Gleiche Rechenergebnisse überall:** Distanzen, Score und Statistik werden
   in Gerät (C++), Web (JavaScript) und App (Dart) gegen dieselben Testdaten geprüft.
 
