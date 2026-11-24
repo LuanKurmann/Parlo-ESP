@@ -79,16 +79,6 @@ bool parseDocument(const std::string& json, JsonDocument& doc) {
     return readInt(doc["v"], kFormatVersion, kFormatVersion, version);
 }
 
-bool clubFromShortName(const char* name, Club& out) {
-    for (int i = 0; i < kClubCount; i++) {
-        if (std::strcmp(name, clubShortName(static_cast<Club>(i))) == 0) {
-            out = static_cast<Club>(i);
-            return true;
-        }
-    }
-    return false;
-}
-
 bool readDateTime(const char* text, DateTime& out) {
     DateTime d;
     char tail = '\0';
@@ -262,8 +252,9 @@ bool roundFromJson(const std::string& json, RoundState& state) {
 
             JsonVariantConst club = so["c"];
             if (!club.isNull()) {
-                Club c = Club::None;
-                if (!club.is<const char*>() || !clubFromShortName(club.as<const char*>(), c)) return false;
+                if (!club.is<const char*>()) return false;
+                const Club c = clubFromShortName(club.as<const char*>());
+                if (c == Club::None) return false;
                 result.round.setClub(h, index, c);
             }
             index++;
@@ -302,6 +293,10 @@ std::string bagToJson(const Bag& bag) {
         if (club == Club::Putter) continue; // der Putter hat keine Schlagweite
         carry[clubShortName(club)] = bag.carry_m[i];
     }
+    JsonArray clubs = doc["clubs"].to<JsonArray>();
+    Club list[kMaxBagClubs];
+    const int count = bagClubs(bag, list);
+    for (int i = 0; i < count; i++) clubs.add(clubShortName(list[i]));
     std::string out;
     serializeJson(doc, out);
     return out;
@@ -310,16 +305,34 @@ std::string bagToJson(const Bag& bag) {
 bool bagFromJson(const std::string& json, Bag& bag) {
     JsonDocument doc;
     if (!parseDocument(json, doc)) return false;
-    JsonObjectConst carry = doc["carry"].as<JsonObjectConst>();
-    if (carry.isNull()) return false;
+    JsonVariantConst carry_value = doc["carry"];
+    JsonVariantConst clubs_value = doc["clubs"];
+    if (carry_value.isNull() && clubs_value.isNull()) return false;
 
-    Bag result;
-    for (int i = 0; i < kClubCount; i++) {
-        const Club club = static_cast<Club>(i);
-        if (club == Club::Putter) continue;
-        // Jeder Schlaeger muss da sein und eine sinnvolle Weite haben.
-        if (!readInt(carry[clubShortName(club)], 1, 400, result.carry_m[i])) return false;
+    Bag result = bag;
+    if (!carry_value.isNull()) {
+        JsonObjectConst carry = carry_value.as<JsonObjectConst>();
+        if (carry.isNull()) return false;
+        for (JsonPairConst entry : carry) {
+            const Club club = clubFromShortName(entry.key().c_str());
+            if (club == Club::None || club == Club::Putter) return false; // unbekannter Schlaeger
+            if (!readInt(entry.value(), 1, 400, result.carry_m[static_cast<int>(club)])) return false;
+        }
     }
+    if (!clubs_value.isNull()) {
+        JsonArrayConst clubs = clubs_value.as<JsonArrayConst>();
+        if (clubs.isNull()) return false;
+        for (int i = 0; i < kClubCount; i++) result.in_bag[i] = false;
+        for (JsonVariantConst item : clubs) {
+            if (!item.is<const char*>()) return false;
+            const Club club = clubFromShortName(item.as<const char*>());
+            if (club == Club::None) return false;
+            if (result.in_bag[static_cast<int>(club)]) return false; // doppelt genannt
+            result.in_bag[static_cast<int>(club)] = true;
+        }
+        result.in_bag[static_cast<int>(Club::Putter)] = true; // immer dabei
+    }
+    if (!isValidBag(result)) return false;
     bag = result;
     return true;
 }

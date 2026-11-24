@@ -65,6 +65,8 @@ details .table-wrap { border: 0; border-top: 1px solid var(--line); border-radiu
 .error { color: var(--danger); }
 .club-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--line); }
 .club-row label { flex: 1; min-width: 0; }
+.club-row input[type="checkbox"] { width: 24px; height: 24px; accent-color: var(--accent); flex: none; }
+.club-row.out label, .club-row.out .unit { color: var(--muted); }
 .club-row input { width: 96px; text-align: right; }
 .club-row .unit { color: var(--muted); }
 #clubs-form button, #wifi-form button { margin-top: 16px; width: 100%; }

@@ -162,10 +162,11 @@ Die App ist die Quelle; das Gerät übernimmt beim Abgleich.
 
 ### 4. Einstellungen für das Gerät
 
-- **Schlägerauswahl:** welche Schläger im Bag sind, Name und Schlagweite.
-  Heute ist die Liste mit elf Schlägern fest; die Firmware bekommt eine
-  wählbare Liste (bis 14 Schläger). Die Schlägerwahl am Gerät zeigt dann nur
-  die eigenen.
+- **Schlägerauswahl:** welche Schläger im Bag sind und wie weit man damit
+  schlägt. Die Firmware kennt einen Katalog von 17 Schlägern (Driver, Holz 3,
+  5 und 7, Hybrid, Eisen 3 bis 9, Pitching, Gap, Sand und Lob Wedge, Putter),
+  aus dem bis zu 14 ins Bag kommen. Die Schlägerwahl am Gerät zeigt nur die
+  eigenen. Frei benannte Schläger gibt es nicht.
 - Schlagweiten aus den gemessenen Durchschnitten übernehmen.
 - Display: Helligkeit, Zeit bis zum Dimmen.
 - Knöpfe 1 und 2 tauschen (je nach Tragweise).
@@ -178,7 +179,7 @@ Alles davon ist im Kern testbar, bevor die App existiert.
 | Nr. | Änderung | Testbar ohne Board |
 |---|---|---|
 | F1 | Dauerhafte Kennung für Runden und Plätze, Änderungszähler für Plätze, Versionsnummer der Schnittstelle | ja – **erledigt** |
-| F2 | Wählbare Schlägerliste statt fester elf Schläger; Schlägerwahl am Gerät passt sich an | ja, inklusive Screenshots |
+| F2 | Wählbare Schlägerliste statt fester elf Schläger; Schlägerwahl am Gerät passt sich an | ja, inklusive Screenshots – **erledigt** |
 | F3 | Einstellungen erweitern (Helligkeit, Dimmzeit, Knöpfe tauschen) | ja |
 | F4 | Nachrichten in Stücke zerlegen und zusammensetzen; Simulator spricht dasselbe über TCP | ja |
 | F5 | Bluetooth-Dienst auf dem Gerät, Koppeln mit Code auf dem Display | nur kompilieren |

@@ -341,7 +341,11 @@ test('Schlaegernamen und Lochlaenge', () => {
   assert.equal(Stats.clubName('PW'), 'Pitching Wedge');
   assert.equal(Stats.clubName('??'), '??');
   assert.equal(Stats.clubName(undefined), '–');
-  assert.equal(Stats.CLUBS.length, 11);
+  assert.equal(Stats.CLUBS.length, 17);
+  assert.equal(Stats.clubName('GW'), 'Gap Wedge');
+  assert.equal(Stats.clubName('H5'), 'Holz 5');
+  assert.equal(new Set(Stats.CLUBS.map(c => c[0])).size, 17); // keine doppelten Kuerzel
+  assert.equal(Stats.MAX_BAG_CLUBS, 14);
   near(Stats.holeLength({ tee: e7(at(0)), green: e7(at(342)) }), 342, 0.3);
   assert.equal(Stats.holeLength({ par: 4 }), null);
 });

@@ -343,20 +343,50 @@
 
   // ---------- Schlaeger ----------
 
+  // Schlaeger im Bag laut Formular (ohne Putter).
+  function selectedClubs() {
+    return Stats.CLUBS.filter(function (c) {
+      var box = document.getElementById('in-bag-' + c[0]);
+      return c[0] !== 'Pt' && box && box.checked;
+    }).map(function (c) { return c[0]; });
+  }
+
+  function updateBagCount() {
+    var count = selectedClubs().length + 1; // plus Putter
+    var text = count + ' von ' + Stats.MAX_BAG_CLUBS + ' Schlägern (mit Putter)';
+    if (count > Stats.MAX_BAG_CLUBS) text += ' – das sind zu viele';
+    if (count < 2) text += ' – mindestens einer muss dabei sein';
+    $('bag-count').textContent = text;
+    $('bag-count').className = count > Stats.MAX_BAG_CLUBS || count < 2 ? 'error' : 'muted';
+    Stats.CLUBS.forEach(function (c) {
+      var row = document.getElementById('club-row-' + c[0]);
+      var box = document.getElementById('in-bag-' + c[0]);
+      if (row && box) row.className = 'club-row' + (box.checked ? '' : ' out');
+    });
+  }
+
   function renderClubInputs() {
     if (!state.bag) return;
     var measured = {};
     Stats.clubStats(state.rounds.map(function (r) { return state.roundData[r.n]; }).filter(Boolean)).forEach(function (s) { measured[s.club] = s; });
-    replace($('club-inputs'), Stats.CLUBS.filter(function (c) { return c[0] !== 'Pt'; }).map(function (c) {
+    // Aeltere Firmware nennt keine Schlaegerliste; dann gelten alle mit Schlagweite.
+    var inBag = state.bag.clubs || Object.keys(state.bag.carry);
+    replace($('club-inputs'), Stats.CLUBS.filter(function (c) { return c[0] !== 'Pt' && state.bag.carry[c[0]] !== undefined; }).map(function (c) {
       var hint = measured[c[0]] ? 'gemessen Ø ' + meters(measured[c[0]].average) + ' (' + count(measured[c[0]].count, 'Schlag', 'Schläge') + ')' : '';
       var current = document.getElementById('carry-' + c[0]);
-      return el('div', { class: 'club-row' }, [
+      var currentBox = document.getElementById('in-bag-' + c[0]);
+      var box = el('input', { id: 'in-bag-' + c[0], type: 'checkbox', 'aria-label': c[1] + ' im Bag' });
+      box.checked = currentBox ? currentBox.checked : inBag.indexOf(c[0]) >= 0;
+      box.addEventListener('change', updateBagCount);
+      return el('div', { class: 'club-row', id: 'club-row-' + c[0] }, [
+        box,
         el('label', { for: 'carry-' + c[0] }, [c[1], hint ? el('br') : null, hint ? el('span', { class: 'muted small' }, hint) : null]),
         el('input', { id: 'carry-' + c[0], type: 'number', inputmode: 'numeric', min: '1', max: '400', step: '1', required: '',
           value: current ? current.value : state.bag.carry[c[0]] }),
         el('span', { class: 'unit' }, 'm')
       ]);
     }));
+    updateBagCount();
   }
 
   function loadBag() {
@@ -364,13 +394,18 @@
   }
 
   function saveBag() {
+    var clubs = selectedClubs();
+    if (clubs.length + 1 > Stats.MAX_BAG_CLUBS) { toast('Höchstens 14 Schläger mit Putter.', true); return; }
+    if (clubs.length < 1) { toast('Mindestens ein Schläger neben dem Putter.', true); return; }
     var carry = {};
     Stats.CLUBS.forEach(function (c) {
-      if (c[0] !== 'Pt') carry[c[0]] = parseInt($('carry-' + c[0]).value, 10);
+      var input = document.getElementById('carry-' + c[0]);
+      if (input) carry[c[0]] = parseInt(input.value, 10);
     });
-    api('PUT', '/api/settings', { v: 1, carry: carry }).then(function () {
-      state.bag = { v: 1, carry: carry };
-      toast('Schlagweiten gespeichert');
+    var bag = { v: 1, carry: carry, clubs: clubs.concat(['Pt']) };
+    api('PUT', '/api/settings', bag).then(function () {
+      state.bag = bag;
+      toast('Bag gespeichert');
     }).catch(function (e) { toast(e.message, true); });
   }
 

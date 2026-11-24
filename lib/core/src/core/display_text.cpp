@@ -155,7 +155,13 @@ ClubPickerText clubPickerText(const App& app) {
                       d.center > kMaxShownDistance ? kMaxShownDistance : d.center);
     }
     std::snprintf(t.hint, sizeof(t.hint), "%s vorgeschlagen", clubName(app.suggestedClub()));
-    t.suggested = static_cast<int>(app.suggestedClub());
+    Club list[kMaxBagClubs];
+    t.count = bagClubs(app.bag(), list);
+    t.suggested = -1;
+    for (int i = 0; i < t.count; i++) {
+        t.clubs[i] = static_cast<uint8_t>(list[i]);
+        if (list[i] == app.suggestedClub()) t.suggested = i;
+    }
     return t;
 }
 

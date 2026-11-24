@@ -65,7 +65,9 @@ ScorecardText scorecardText(const App& app);
 struct ClubPickerText {
     char subtitle[40]; // "Noch 269 m bis Grünmitte" oder leer
     char hint[40];     // "Driver vorgeschlagen"
-    int suggested;     // Index des markierten Schlaegers
+    int count;                    // Anzahl Schlaeger im Bag
+    uint8_t clubs[kMaxBagClubs];  // die Schlaeger im Bag (Werte von Club), in Anzeigereihenfolge
+    int suggested;                // Position des markierten Schlaegers in `clubs`, -1 wenn keiner
 };
 
 ClubPickerText clubPickerText(const App& app);

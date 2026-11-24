@@ -573,7 +573,7 @@ static void test_old_round_file_without_id_gets_a_stable_one() {
     TEST_ASSERT_EQUAL_INT(200, rig.call("GET", ("/api/rounds/id/" + id).c_str()).status);
 }
 
-// ---------- Schlagweiten ----------
+// ---------- Schlagweiten und Bag ----------
 
 static void test_get_settings_default_bag() {
     Rig rig;
@@ -581,18 +581,28 @@ static void test_get_settings_default_bag() {
     TEST_ASSERT_EQUAL_INT(1, doc["v"].as<int>());
     TEST_ASSERT_EQUAL_INT(210, doc["carry"]["Dr"].as<int>());
     TEST_ASSERT_EQUAL_INT(140, doc["carry"]["E7"].as<int>());
-    TEST_ASSERT_EQUAL_INT(70, doc["carry"]["SW"].as<int>());
+    TEST_ASSERT_EQUAL_INT(85, doc["carry"]["GW"].as<int>()); // auch Schlaeger, die nicht im Bag sind
     TEST_ASSERT_TRUE(doc["carry"]["Pt"].isNull());
-    TEST_ASSERT_EQUAL_INT(10, static_cast<int>(doc["carry"].size()));
+    TEST_ASSERT_EQUAL_INT(16, static_cast<int>(doc["carry"].size()));
+    JsonArrayConst clubs = doc["clubs"].as<JsonArrayConst>();
+    TEST_ASSERT_EQUAL_INT(11, static_cast<int>(clubs.size()));
+    TEST_ASSERT_EQUAL_STRING("Dr", clubs[0].as<const char*>());
+    TEST_ASSERT_EQUAL_STRING("Hy", clubs[2].as<const char*>());
+    TEST_ASSERT_EQUAL_STRING("Pt", clubs[10].as<const char*>());
 }
 
+// So schickt es die Web-Oberflaeche der ersten Fassung: nur Schlagweiten.
 static const char* kShortHitter =
     R"({"v":1,"carry":{"Dr":180,"H3":165,"Hy":150,"E5":135,"E6":125,"E7":115,"E8":105,"E9":95,"PW":85,"SW":60}})";
 
 static void test_put_settings_changes_suggestions_and_persists() {
     Rig rig;
     TEST_ASSERT_EQUAL_INT(200, rig.call("PUT", "/api/settings", kShortHitter).status);
-    TEST_ASSERT_EQUAL_STRING(kShortHitter, rig.call("GET", "/api/settings").body.c_str());
+    JsonDocument doc = parse(rig.call("GET", "/api/settings"));
+    TEST_ASSERT_EQUAL_INT(180, doc["carry"]["Dr"].as<int>());
+    TEST_ASSERT_EQUAL_INT(60, doc["carry"]["SW"].as<int>());
+    TEST_ASSERT_EQUAL_INT(85, doc["carry"]["GW"].as<int>());                 // nicht genannt: bleibt
+    TEST_ASSERT_EQUAL_INT(11, static_cast<int>(doc["clubs"].size()));        // Auswahl bleibt
 
     rig.hit(0.0);
     rig.app().setPosition(positionOnHole(rig.app().course().holes[0], 202.0)); // 140 m bis zur Mitte
@@ -604,19 +614,78 @@ static void test_put_settings_changes_suggestions_and_persists() {
     TEST_ASSERT_EQUAL_INT(0, rig.app().bag().carry_m[static_cast<int>(Club::Putter)]);
 }
 
+static void test_put_settings_round_trips_through_get() {
+    Rig rig;
+    const std::string original = rig.call("GET", "/api/settings").body;
+    TEST_ASSERT_EQUAL_INT(200, rig.call("PUT", "/api/settings", original).status);
+    TEST_ASSERT_EQUAL_STRING(original.c_str(), rig.call("GET", "/api/settings").body.c_str());
+}
+
+static void test_put_club_selection() {
+    Rig rig;
+    TEST_ASSERT_EQUAL_INT(200, rig.call("PUT", "/api/settings", R"({"v":1,"clubs":["H5","E4","E8","GW","Pt"]})").status);
+    JsonDocument doc = parse(rig.call("GET", "/api/settings"));
+    TEST_ASSERT_EQUAL_INT(5, static_cast<int>(doc["clubs"].size()));
+    TEST_ASSERT_EQUAL_STRING("H5", doc["clubs"][0].as<const char*>());
+    TEST_ASSERT_EQUAL_INT(210, doc["carry"]["Dr"].as<int>()); // Schlagweiten bleiben, auch fuer abgewaehlte
+
+    // Der Vorschlag am Geraet kommt nur noch aus diesen Schlaegern.
+    rig.app().setPosition(rig.app().course().holes[0].tee);
+    rig.app().button1Short();
+    TEST_ASSERT_TRUE(rig.app().suggestedClub() == Club::Wood5);
+    rig.app().button2Short();
+    TEST_ASSERT_TRUE(rig.app().suggestedClub() == Club::Iron4);
+
+    rig.restart();
+    TEST_ASSERT_FALSE(rig.app().bag().in_bag[static_cast<int>(Club::Driver)]);
+    TEST_ASSERT_TRUE(rig.app().bag().in_bag[static_cast<int>(Club::GapWedge)]);
+}
+
+static void test_putter_stays_even_if_the_list_omits_it() {
+    Rig rig;
+    TEST_ASSERT_EQUAL_INT(200, rig.call("PUT", "/api/settings", R"({"v":1,"clubs":["Dr","E7"]})").status);
+    JsonDocument doc = parse(rig.call("GET", "/api/settings"));
+    TEST_ASSERT_EQUAL_INT(3, static_cast<int>(doc["clubs"].size()));
+    TEST_ASSERT_EQUAL_STRING("Pt", doc["clubs"][2].as<const char*>());
+}
+
+static void test_selection_and_distances_in_one_request() {
+    Rig rig;
+    TEST_ASSERT_EQUAL_INT(200, rig.call("PUT", "/api/settings", R"({"v":1,"carry":{"LW":48},"clubs":["Dr","LW"]})").status);
+    TEST_ASSERT_EQUAL_INT(48, rig.app().bag().carry_m[static_cast<int>(Club::LobWedge)]);
+    TEST_ASSERT_TRUE(rig.app().bag().in_bag[static_cast<int>(Club::LobWedge)]);
+    TEST_ASSERT_FALSE(rig.app().bag().in_bag[static_cast<int>(Club::Iron7)]);
+}
+
+static void test_full_bag_of_14_is_accepted_and_15_is_not() {
+    Rig rig;
+    const char* fourteen = R"({"v":1,"clubs":["Dr","H3","H5","Hy","E4","E5","E6","E7","E8","E9","PW","GW","SW","Pt"]})";
+    const char* fifteen = R"({"v":1,"clubs":["Dr","H3","H5","Hy","E4","E5","E6","E7","E8","E9","PW","GW","SW","LW","Pt"]})";
+    TEST_ASSERT_EQUAL_INT(200, rig.call("PUT", "/api/settings", fourteen).status);
+    expectError(rig.call("PUT", "/api/settings", fifteen), 400);
+    TEST_ASSERT_EQUAL_INT(14, bagSize(rig.app().bag())); // die 14 bleiben
+    // 14 Schlaeger ohne genannten Putter waeren mit Putter 15.
+    expectError(rig.call("PUT", "/api/settings", R"({"v":1,"clubs":["Dr","H3","H5","H7","Hy","E3","E4","E5","E6","E7","E8","E9","PW","GW"]})"), 400);
+}
+
 static void test_put_invalid_settings_changes_nothing() {
     Rig rig;
     const char* bad[] = {
-        "", "{}", R"({"v":1})", R"({"v":1,"carry":[]})",
-        R"({"v":1,"carry":{"Dr":180}})", // Schlaeger fehlen
-        R"({"v":1,"carry":{"Dr":0,"H3":165,"Hy":150,"E5":135,"E6":125,"E7":115,"E8":105,"E9":95,"PW":85,"SW":60}})",
-        R"({"v":1,"carry":{"Dr":401,"H3":165,"Hy":150,"E5":135,"E6":125,"E7":115,"E8":105,"E9":95,"PW":85,"SW":60}})",
-        R"({"v":1,"carry":{"Dr":"weit","H3":165,"Hy":150,"E5":135,"E6":125,"E7":115,"E8":105,"E9":95,"PW":85,"SW":60}})",
-        R"({"v":1,"carry":{"Dr":180.5,"H3":165,"Hy":150,"E5":135,"E6":125,"E7":115,"E8":105,"E9":95,"PW":85,"SW":60}})",
+        "", "{}", R"({"v":1})", R"({"v":1,"carry":[]})", R"({"v":2,"carry":{"Dr":180}})",
+        R"({"v":1,"carry":{"Dr":0}})", R"({"v":1,"carry":{"Dr":401}})", R"({"v":1,"carry":{"Dr":"weit"}})",
+        R"({"v":1,"carry":{"Dr":180.5}})",
+        R"({"v":1,"carry":{"XX":150}})",        // unbekannter Schlaeger
+        R"({"v":1,"carry":{"Pt":5}})",          // der Putter hat keine Schlagweite
+        R"({"v":1,"clubs":"Dr"})", R"({"v":1,"clubs":[]})", // leer waere nur der Putter
+        R"({"v":1,"clubs":["Pt"]})",
+        R"({"v":1,"clubs":["Dr","Dr"]})",       // doppelt
+        R"({"v":1,"clubs":["Dr","ZZ"]})", R"({"v":1,"clubs":["Dr",7]})", R"({"v":1,"clubs":["dr"]})",
+        R"({"v":1,"carry":{"Dr":180},"clubs":["Dr","ZZ"]})", // ein Fehler verwirft die ganze Anfrage
     };
     for (const char* body : bad) {
         expectError(rig.call("PUT", "/api/settings", body), 400);
-        TEST_ASSERT_EQUAL_INT(210, rig.app().bag().carry_m[0]);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(210, rig.app().bag().carry_m[0], body);
+        TEST_ASSERT_EQUAL_INT_MESSAGE(11, bagSize(rig.app().bag()), body);
     }
     TEST_ASSERT_EQUAL_INT(0, static_cast<int>(rig.fs.files.count("settings.json")));
 }
@@ -634,6 +703,26 @@ static void test_damaged_settings_file_falls_back_to_defaults() {
     rig.fs.files["settings.json"][25] ^= 0x01;
     rig.restart();
     TEST_ASSERT_EQUAL_INT(210, rig.app().bag().carry_m[0]);
+}
+
+static void test_settings_file_of_the_first_version_is_still_read() {
+    // Datei mit nur zehn Schlagweiten und ohne Schlaegerliste.
+    Rig rig;
+    rig.fs.files["settings.json"] = wrapPayload(kShortHitter);
+    rig.restart();
+    TEST_ASSERT_EQUAL_INT(180, rig.app().bag().carry_m[0]);
+    TEST_ASSERT_EQUAL_INT(11, bagSize(rig.app().bag()));
+}
+
+static void test_shots_with_clubs_no_longer_in_the_bag_stay_readable() {
+    Rig rig;
+    rig.hit(0.0); // Driver
+    rig.endRoundAndStartNew();
+    rig.call("PUT", "/api/settings", R"({"v":1,"clubs":["E7"]})"); // Driver ist nicht mehr im Bag
+    rig.restart();
+    std::unique_ptr<RoundState> state(new RoundState());
+    TEST_ASSERT_TRUE(roundFromJson(rig.call("GET", "/api/rounds/1").body, *state));
+    TEST_ASSERT_TRUE(state->round.shot(0, 0)->club == Club::Driver);
 }
 
 // ---------- Zufaellige Anfragen ----------
@@ -836,6 +925,13 @@ int main() {
     RUN_TEST(test_old_round_file_without_id_gets_a_stable_one);
     RUN_TEST(test_get_settings_default_bag);
     RUN_TEST(test_put_settings_changes_suggestions_and_persists);
+    RUN_TEST(test_put_settings_round_trips_through_get);
+    RUN_TEST(test_put_club_selection);
+    RUN_TEST(test_putter_stays_even_if_the_list_omits_it);
+    RUN_TEST(test_selection_and_distances_in_one_request);
+    RUN_TEST(test_full_bag_of_14_is_accepted_and_15_is_not);
+    RUN_TEST(test_settings_file_of_the_first_version_is_still_read);
+    RUN_TEST(test_shots_with_clubs_no_longer_in_the_bag_stay_readable);
     RUN_TEST(test_put_invalid_settings_changes_nothing);
     RUN_TEST(test_put_settings_reports_storage_failure);
     RUN_TEST(test_damaged_settings_file_falls_back_to_defaults);

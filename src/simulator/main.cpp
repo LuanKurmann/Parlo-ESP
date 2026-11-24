@@ -40,6 +40,7 @@
 //                 net:hotspot / net:connecting / net:connected / net:off
 //                                  Zustand des simulierten WLANs setzen
 //                 bat:87 / bat:charging:50 / bat:none   Akkustand setzen
+//                 bag:Dr+H3+E7+SW   Schlaeger im Bag festlegen (mit + getrennt)
 //                 play:60          mit --replay: 60 Sekunden der Aufzeichnung abspielen
 //
 // Beispiel: program --headless --do "b1,b1,pos:218,shot:distanz.bmp"
@@ -249,6 +250,18 @@ struct Simulator {
             network.set(golf::NetMode::Connected, "Heimnetz", "192.168.1.57");
         } else if (command == "net:off") {
             network.set(golf::NetMode::Off, "", "");
+        } else if (command.compare(0, 4, "bag:") == 0) {
+            std::string list = "{\"v\":1,\"clubs\":[";
+            std::string codes = command.substr(4);
+            size_t start = 0;
+            for (bool first = true; start <= codes.size(); first = false) {
+                size_t end = codes.find('+', start);
+                if (end == std::string::npos) end = codes.size();
+                list += std::string(first ? "" : ",") + "\"" + codes.substr(start, end - start) + "\"";
+                start = end + 1;
+            }
+            golf::Bag bag = app().bag();
+            if (!golf::bagFromJson(list + "]}", bag) || !session->setBag(bag)) return false;
         } else if (command.compare(0, 4, "bat:") == 0) {
             golf::BatteryInfo battery;
             const std::string value = command.substr(4);

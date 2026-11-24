@@ -153,26 +153,58 @@ test('Rundendetail stimmt mit dem Geraet ueberein und laesst sich exportieren', 
   await page.context().close();
 });
 
-test('Schlagweiten aendern wirkt auf dem Geraet', async () => {
+test('Bag und Schlagweiten aendern wirkt auf dem Geraet', async () => {
   const page = await newPage();
   await page.goto(baseUrl + '/');
   await page.click('[data-tab="clubs"]');
   await page.waitForSelector('#carry-Dr');
   assert.equal(await page.inputValue('#carry-Dr'), '210');
-  assert.equal(await page.locator('#club-inputs input').count(), 10); // ohne Putter
+  assert.equal(await page.locator('#club-inputs input[type="number"]').count(), 16); // ganzer Katalog ohne Putter
+  assert.equal(await page.locator('#club-inputs input[type="checkbox"]:checked').count(), 10); // Standard-Bag
+  assert.match(await page.textContent('#bag-count'), /11 von 14 Schlägern/);
+  assert.equal(await page.isChecked('#in-bag-E7'), true);
+  assert.equal(await page.isChecked('#in-bag-GW'), false);
   await page.waitForFunction(() => document.querySelector('#club-inputs').textContent.includes('gemessen'));
   assert.match(await page.textContent('#club-inputs'), /Driver\s*gemessen Ø 220 m \(2 Schläge\)/);
 
+  // Gap Wedge dazu, Holz 3 raus, zwei Schlagweiten aendern.
+  await page.check('#in-bag-GW');
+  await page.uncheck('#in-bag-H3');
+  assert.match(await page.textContent('#bag-count'), /11 von 14 Schlägern/);
   await page.fill('#carry-Dr', '195');
-  await page.fill('#carry-E7', '128');
+  await page.fill('#carry-GW', '92');
   await page.click('#clubs-form button[type="submit"]');
   await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('gespeichert'));
-  const settings = await getJson('/api/settings');
+  let settings = await getJson('/api/settings');
   assert.equal(settings.carry.Dr, 195);
-  assert.equal(settings.carry.E7, 128);
+  assert.equal(settings.carry.GW, 92);
   assert.equal(settings.carry.SW, 70);
+  assert.deepEqual(settings.clubs, ['Dr', 'Hy', 'E5', 'E6', 'E7', 'E8', 'E9', 'PW', 'GW', 'SW', 'Pt']);
 
-  // Ungueltige Eingabe schickt der Browser gar nicht erst ab.
+  // Nach dem Neuladen zeigt die Seite denselben Stand.
+  await page.reload();
+  await page.click('[data-tab="clubs"]');
+  await page.waitForSelector('#carry-Dr');
+  assert.equal(await page.isChecked('#in-bag-GW'), true);
+  assert.equal(await page.isChecked('#in-bag-H3'), false);
+  assert.equal(await page.inputValue('#carry-GW'), '92');
+
+  // Zu viele Schlaeger: wird angezeigt und nicht gespeichert.
+  for (const code of ['H3', 'H5', 'H7', 'E3', 'E4', 'LW']) await page.check('#in-bag-' + code);
+  assert.match(await page.textContent('#bag-count'), /17 von 14 Schlägern.*zu viele/);
+  await page.click('#clubs-form button[type="submit"]');
+  await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Höchstens 14'));
+  settings = await getJson('/api/settings');
+  assert.equal(settings.clubs.length, 11);
+
+  // Genau 14 geht.
+  for (const code of ['H7', 'E3', 'LW']) await page.uncheck('#in-bag-' + code);
+  assert.match(await page.textContent('#bag-count'), /^14 von 14 Schlägern \(mit Putter\)$/);
+  await page.click('#clubs-form button[type="submit"]');
+  await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Bag gespeichert'));
+  assert.equal((await getJson('/api/settings')).clubs.length, 14);
+
+  // Ungueltige Schlagweite schickt der Browser gar nicht erst ab.
   await page.fill('#carry-Dr', '900');
   await page.click('#clubs-form button[type="submit"]');
   await page.waitForTimeout(300);

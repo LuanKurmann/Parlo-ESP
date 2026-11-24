@@ -4,10 +4,13 @@
 
   var Geo = typeof require !== 'undefined' ? require('./geo.js') : root.GolfGeo;
 
+  // Alle Schlaeger, die das Geraet kennt, in seiner Reihenfolge (lib/core/src/core/clubs.cpp).
   var CLUBS = [
-    ['Dr', 'Driver'], ['H3', 'Holz 3'], ['Hy', 'Hybrid'], ['E5', 'Eisen 5'], ['E6', 'Eisen 6'], ['E7', 'Eisen 7'],
-    ['E8', 'Eisen 8'], ['E9', 'Eisen 9'], ['PW', 'Pitching Wedge'], ['SW', 'Sand Wedge'], ['Pt', 'Putter']
+    ['Dr', 'Driver'], ['H3', 'Holz 3'], ['H5', 'Holz 5'], ['H7', 'Holz 7'], ['Hy', 'Hybrid'], ['E3', 'Eisen 3'],
+    ['E4', 'Eisen 4'], ['E5', 'Eisen 5'], ['E6', 'Eisen 6'], ['E7', 'Eisen 7'], ['E8', 'Eisen 8'], ['E9', 'Eisen 9'],
+    ['PW', 'Pitching Wedge'], ['GW', 'Gap Wedge'], ['SW', 'Sand Wedge'], ['LW', 'Lob Wedge'], ['Pt', 'Putter']
   ];
+  var MAX_BAG_CLUBS = 14; // mit Putter
   var MAX_PLAUSIBLE_M = 400; // laengere "Schlaege" sind Messfehler
 
   function clubName(short) {
@@ -119,7 +122,7 @@
   }
 
   var api = {
-    CLUBS: CLUBS, clubName: clubName, shotDistances: shotDistances, roundSummary: roundSummary,
+    CLUBS: CLUBS, MAX_BAG_CLUBS: MAX_BAG_CLUBS, clubName: clubName, shotDistances: shotDistances, roundSummary: roundSummary,
     formatToPar: formatToPar, clubStats: clubStats, formatDate: formatDate, toCsv: toCsv, holeLength: holeLength
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

@@ -110,7 +110,7 @@ void App::button2Short() {
     input_count_++;
     switch (overlay_) {
         case Overlay::None: finishHole(); break;
-        case Overlay::ClubPicker: suggested_ = nextClub(suggested_); break;
+        case Overlay::ClubPicker: suggested_ = nextClub(bag_, suggested_); break;
         case Overlay::Menu: menu_ = static_cast<MenuItem>((static_cast<int>(menu_) + 1) % kMenuItemCount); break;
         case Overlay::HoleDone: nextHole(); break;
         case Overlay::RoundSummary:

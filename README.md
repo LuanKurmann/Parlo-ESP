@@ -104,7 +104,8 @@ Das Gerät stellt eine Web-Oberfläche bereit, die im Handy-Browser läuft:
   Durchschnitt pro Schläger, Export als CSV oder JSON.
 - **Platz:** Platz nach Namen in OpenStreetMap suchen, Vorschau prüfen und aufs
   Gerät laden; Platzdatei sichern und zurückspielen.
-- **Schläger:** eigene Schlagweiten für den Schlägervorschlag.
+- **Schläger:** das eigene Bag zusammenstellen (bis 14 Schläger) und
+  Schlagweiten für den Schlägervorschlag eintragen.
 
 Im Simulator ausprobieren:
 

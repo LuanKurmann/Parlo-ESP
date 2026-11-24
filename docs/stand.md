@@ -78,7 +78,9 @@ und zufällige Bedienung.
 - **Tragweise und Gehäuse:** noch offen; Schrift ist für Trolley und Handgelenk gross genug.
 - **Platzdaten:** Import aus OpenStreetMap und selbst markieren, beides möglich.
 - **Grün:** als Kreis um die Mitte; der Radius kommt aus der OpenStreetMap-Fläche, sonst 13 m.
-- **Schlägervorschlag:** der Schläger mit der nächstliegenden Schlagweite.
+- **Schlägervorschlag:** der Schläger aus dem Bag mit der nächstliegenden Schlagweite.
+- **Bag:** bis zu 14 Schläger aus einem Katalog von 17, einstellbar über die Web-Oberfläche.
+- **Kennungen:** Runden, Plätze und das Gerät tragen dauerhafte Kennungen für den Abgleich mit einer App.
 - **Neue Runde:** nur mit langem Druck, damit keine Runde versehentlich endet.
 - **Display:** dimmt nach 20 Sekunden, geht erst nach 30 Minuten aus, damit
   während des Spiels kein Schlag nur das Display weckt.

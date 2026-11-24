@@ -47,8 +47,13 @@ std::string roundToJson(const Round& round, int hole, const DateTime& started, c
                         const Course* course = nullptr, const char* round_id = nullptr);
 bool roundFromJson(const std::string& json, RoundState& state);
 
-// Schlagweiten pro Schlaeger. {"v":1,"carry":{"Dr":210,"H3":190,...}}
+// Das Bag: {"v":1,"carry":{"Dr":210,"H3":190,...},"clubs":["Dr","H3",...,"Pt"]}
+// "carry" sind die Schlagweiten, "clubs" die Schlaeger im Bag.
 std::string bagToJson(const Bag& bag);
+
+// Uebernimmt die Angaben aus dem JSON in `bag`. Was im JSON fehlt (einzelne
+// Schlagweiten oder die ganze Liste "clubs"), bleibt in `bag`, wie es war.
+// Bei jedem Fehler bleibt `bag` unveraendert und es kommt false zurueck.
 bool bagFromJson(const std::string& json, Bag& bag);
 
 } // namespace golf

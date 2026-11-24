@@ -16,6 +16,9 @@
     {"name": "schlaegerwahl_weitergeschaltet", "do": "b1,b2,b2,b2,b2,b2"},
     {"name": "schlaegerwahl_putter", "do": "pos:338,b1"},
     {"name": "schlaegerwahl_ohne_distanz", "do": "gps:off,b1"},
+    {"name": "schlaegerwahl_kleines_bag", "do": "bag:H5+E6+E9+SW,pos:200,b1"},
+    {"name": "schlaegerwahl_volles_bag", "do": "bag:Dr+H3+H5+Hy+E4+E5+E6+E7+E8+E9+PW+GW+SW,pos:180,b1"},
+    {"name": "schlaegerwahl_zwoelf", "do": "bag:Dr+H3+Hy+E5+E6+E7+E8+E9+PW+GW+SW,b1,b2,b2,b2,b2,b2,b2,b2,b2,b2,b2,b2"},
 
     {"name": "schlaege_leer", "do": "next"},
     {"name": "schlaege_liste", "do": "b1,b1,pos:218,b1,b1,pos:330,b1,b1,pos:340,b1,b1,next"},

@@ -23,9 +23,11 @@ private:
     lv_obj_t* club_ = nullptr;
     lv_obj_t* club_subtitle_ = nullptr;
     lv_obj_t* club_hint_ = nullptr;
-    lv_obj_t* chips_[kClubCount] = {};
-    lv_obj_t* chip_labels_[kClubCount] = {};
-    int shown_suggestion_ = -1;
+    lv_obj_t* chip_grid_ = nullptr;
+    lv_obj_t* chips_[kMaxBagClubs] = {};
+    lv_obj_t* chip_labels_[kMaxBagClubs] = {};
+    ClubPickerText shown_picker_{};
+    bool picker_shown_once_ = false;
 
     lv_obj_t* menu_ = nullptr;
     lv_obj_t* items_[kMenuItemCount] = {};

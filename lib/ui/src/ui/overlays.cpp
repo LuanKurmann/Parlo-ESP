@@ -1,6 +1,7 @@
 #include "ui/overlays.h"
 
 #include <cstdint>
+#include <cstring>
 #include <initializer_list>
 
 #include "ui/theme.h"
@@ -18,9 +19,11 @@ void notify() {
     if (g_on_input != nullptr) g_on_input();
 }
 
+// Welcher Schlaeger auf einer Kachel liegt, steht in ihren Nutzdaten.
 void onClubClicked(lv_event_t* e) {
-    const intptr_t index = reinterpret_cast<intptr_t>(lv_event_get_user_data(e));
-    g_app->selectClub(static_cast<Club>(index));
+    lv_obj_t* chip = static_cast<lv_obj_t*>(lv_event_get_target(e));
+    const intptr_t club = reinterpret_cast<intptr_t>(lv_obj_get_user_data(chip));
+    g_app->selectClub(static_cast<Club>(club));
     notify();
 }
 
@@ -80,17 +83,16 @@ void Overlays::create(lv_obj_t* parent, App& app, void (*on_input)()) {
     club_subtitle_ = makeLabel(club_, &golf_font_text_20, kColorMuted);
     lv_obj_align(club_subtitle_, LV_ALIGN_TOP_MID, 0, 110);
 
-    lv_obj_t* chip_grid = makeBox(club_);
-    lv_obj_set_size(chip_grid, 4 * 77 + 3 * 8, LV_SIZE_CONTENT);
-    lv_obj_set_flex_flow(chip_grid, LV_FLEX_FLOW_ROW_WRAP);
-    lv_obj_set_flex_align(chip_grid, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
-    lv_obj_set_style_pad_column(chip_grid, 8, 0);
-    lv_obj_set_style_pad_row(chip_grid, 8, 0);
-    lv_obj_align(chip_grid, LV_ALIGN_TOP_MID, 0, 150);
-    for (int i = 0; i < kClubCount; i++) {
-        chips_[i] = makeTile(chip_grid, 77, 56, &golf_font_num_30, &chip_labels_[i]);
-        lv_label_set_text(chip_labels_[i], clubShortName(static_cast<Club>(i)));
-        lv_obj_add_event_cb(chips_[i], onClubClicked, LV_EVENT_CLICKED, reinterpret_cast<void*>(static_cast<intptr_t>(i)));
+    chip_grid_ = makeBox(club_);
+    lv_obj_set_size(chip_grid_, 4 * 77 + 3 * 8, LV_SIZE_CONTENT);
+    lv_obj_set_flex_flow(chip_grid_, LV_FLEX_FLOW_ROW_WRAP);
+    lv_obj_set_flex_align(chip_grid_, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_set_style_pad_column(chip_grid_, 8, 0);
+    lv_obj_set_style_pad_row(chip_grid_, 8, 0);
+    lv_obj_align(chip_grid_, LV_ALIGN_TOP_MID, 0, 150);
+    for (int i = 0; i < kMaxBagClubs; i++) {
+        chips_[i] = makeTile(chip_grid_, 77, 56, &golf_font_num_30, &chip_labels_[i]);
+        lv_obj_add_event_cb(chips_[i], onClubClicked, LV_EVENT_CLICKED, nullptr);
     }
     club_hint_ = makeLabel(club_, &golf_font_text_20, kColorMuted);
     lv_obj_align(club_hint_, LV_ALIGN_TOP_MID, 0, 352);
@@ -168,10 +170,27 @@ void Overlays::show(const App& app) {
             const ClubPickerText text = clubPickerText(app);
             lv_label_set_text(club_subtitle_, text.subtitle);
             lv_label_set_text(club_hint_, text.hint);
-            if (text.suggested != shown_suggestion_) {
-                shown_suggestion_ = text.suggested;
-                for (int i = 0; i < kClubCount; i++) {
+            if (!picker_shown_once_ || std::memcmp(&text, &shown_picker_, sizeof(text)) != 0) {
+                picker_shown_once_ = true;
+                shown_picker_ = text;
+                // Bis 12 Schlaeger vier pro Reihe; bei 13 oder 14 fuenf schmalere,
+                // damit es bei drei Reihen bleibt.
+                const bool narrow = text.count > 12;
+                const int width = narrow ? 62 : 77;
+                const int gap = narrow ? 6 : 8;
+                const int per_row = narrow ? 5 : 4;
+                lv_obj_set_width(chip_grid_, per_row * width + (per_row - 1) * gap);
+                lv_obj_set_style_pad_column(chip_grid_, gap, 0);
+                for (int i = 0; i < kMaxBagClubs; i++) {
+                    if (i >= text.count) {
+                        lv_obj_add_flag(chips_[i], LV_OBJ_FLAG_HIDDEN);
+                        continue;
+                    }
                     const bool on = i == text.suggested;
+                    lv_obj_remove_flag(chips_[i], LV_OBJ_FLAG_HIDDEN);
+                    lv_obj_set_width(chips_[i], width);
+                    lv_obj_set_user_data(chips_[i], reinterpret_cast<void*>(static_cast<intptr_t>(text.clubs[i])));
+                    lv_label_set_text(chip_labels_[i], clubShortName(static_cast<Club>(text.clubs[i])));
                     lv_obj_set_style_bg_color(chips_[i], color(on ? kColorAccent : kColorChip), 0);
                     lv_obj_set_style_border_color(chips_[i], color(on ? kColorAccent : kColorLine), 0);
                     lv_obj_set_style_text_color(chip_labels_[i], color(on ? kColorOnAccent : kColorText), 0);

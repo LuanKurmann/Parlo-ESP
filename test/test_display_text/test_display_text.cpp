@@ -326,11 +326,46 @@ static void test_club_picker_text() {
     ClubPickerText t = clubPickerText(app);
     TEST_ASSERT_EQUAL_STRING("Noch 140 m bis Grünmitte", t.subtitle);
     TEST_ASSERT_EQUAL_STRING("Eisen 7 vorgeschlagen", t.hint);
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(Club::Iron7), t.suggested);
+    TEST_ASSERT_EQUAL_INT(11, t.count); // Standard-Bag
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(Club::Driver), t.clubs[0]);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(Club::Putter), t.clubs[10]);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(Club::Iron7), t.clubs[t.suggested]);
     app.button2Short();
     t = clubPickerText(app);
     TEST_ASSERT_EQUAL_STRING("Eisen 8 vorgeschlagen", t.hint);
-    TEST_ASSERT_EQUAL_INT(static_cast<int>(Club::Iron8), t.suggested);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(Club::Iron8), t.clubs[t.suggested]);
+}
+
+static void test_club_picker_shows_only_the_clubs_in_the_bag() {
+    Bag bag;
+    for (int i = 0; i < kClubCount; i++) bag.in_bag[i] = false;
+    bag.in_bag[static_cast<int>(Club::Wood5)] = true;
+    bag.in_bag[static_cast<int>(Club::Iron8)] = true;
+    bag.in_bag[static_cast<int>(Club::LobWedge)] = true;
+    bag.in_bag[static_cast<int>(Club::Putter)] = true;
+    App app(makeCourse());
+    app.setBag(bag);
+    app.setPosition(kTee);
+    app.button1Short();
+    const ClubPickerText t = clubPickerText(app);
+    TEST_ASSERT_EQUAL_INT(4, t.count);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(Club::Wood5), t.clubs[0]);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(Club::Iron8), t.clubs[1]);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(Club::LobWedge), t.clubs[2]);
+    TEST_ASSERT_EQUAL_INT(static_cast<int>(Club::Putter), t.clubs[3]);
+    TEST_ASSERT_EQUAL_INT(0, t.suggested); // Abschlag Par 5: der laengste
+    TEST_ASSERT_EQUAL_STRING("Holz 5 vorgeschlagen", t.hint);
+}
+
+static void test_club_picker_with_a_full_bag_of_14() {
+    Bag bag;
+    for (int i = 0; i < kClubCount; i++) bag.in_bag[i] = i < 13 || static_cast<Club>(i) == Club::Putter;
+    App app(makeCourse());
+    app.setBag(bag);
+    app.button1Short();
+    const ClubPickerText t = clubPickerText(app);
+    TEST_ASSERT_EQUAL_INT(14, t.count);
+    TEST_ASSERT_TRUE(t.suggested >= 0 && t.suggested < 14);
 }
 
 static void test_club_picker_without_distance() {
@@ -616,6 +651,8 @@ int main() {
     RUN_TEST(test_scorecard_under_par_and_hole_without_par);
     RUN_TEST(test_scorecard_nine_holes_and_two_digit_scores);
     RUN_TEST(test_club_picker_text);
+    RUN_TEST(test_club_picker_shows_only_the_clubs_in_the_bag);
+    RUN_TEST(test_club_picker_with_a_full_bag_of_14);
     RUN_TEST(test_club_picker_without_distance);
     RUN_TEST(test_longest_club_name_fits);
     RUN_TEST(test_menu_texts);
