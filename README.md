@@ -30,6 +30,7 @@ node --test web/test/*.test.js           # Web-Oberfläche testen (braucht Node 
 .pio/build/simulator/program             # Simulator starten (Tasten siehe unten)
 pio run -e device                        # Firmware bauen
 pio run -e device -t upload              # Firmware aufs Gerät laden
+sh scripts/check_all.sh                  # alles bauen und alle Tests ausführen
 ```
 
 Bei jedem Push laufen Tests, Simulator-Build und Firmware-Build automatisch
