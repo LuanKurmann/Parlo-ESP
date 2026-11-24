@@ -12,7 +12,8 @@ GPS, zwei Knöpfe): Distanz zum Grün, Schläge, Schlägerwahl und Scorecard.
 | `src/device` | Einstieg der Firmware für das Gerät. |
 | `src/simulator` | Einstieg des PC-Simulators (SDL2-Fenster). |
 | `test` | Unit- und Szenario-Tests für den Kern. |
-| `tools` | Hilfsprogramme für den PC (GPX-Umwandler). |
+| `tools` | Hilfsprogramme für den PC (GPX-Umwandler, Screenshot-Tests). |
+| `web` | Web-Oberfläche fürs Handy: Runden auswerten, Platz laden, Schlagweiten einstellen. |
 
 ## Befehle
 
@@ -24,6 +25,7 @@ pio test -e native                       # Unit-Tests auf dem PC
 pio test -e native_sanitize              # dieselben Tests mit Speicherfehler-Erkennung
 pio run -e simulator                     # Simulator bauen
 python3 tools/screenshot_test.py         # jede Ansicht mit ihrem Referenzbild vergleichen
+node --test web/test/*.test.js           # Web-Oberfläche testen (braucht Node 22 und Playwright)
 .pio/build/simulator/program             # Simulator starten (Tasten siehe unten)
 pio run -e device                        # Firmware bauen
 pio run -e device -t upload              # Firmware aufs Gerät laden
@@ -92,11 +94,31 @@ python3 tools/screenshot_test.py --update
 Schlägt der Test fehl, liegen das aktuelle Bild und ein Differenzbild in
 `screenshot_failures/`. Voraussetzung ist Pillow (`pip install pillow`).
 
+## Verbindung zum Handy
+
+Das Gerät stellt eine Web-Oberfläche bereit, die im Handy-Browser läuft:
+
+- **Runden:** laufende Runde, Archiv, Scorecard, Schläge mit Weiten,
+  Durchschnitt pro Schläger, Export als CSV oder JSON.
+- **Platz:** Platz nach Namen in OpenStreetMap suchen, Vorschau prüfen und aufs
+  Gerät laden; Platzdatei sichern und zurückspielen.
+- **Schläger:** eigene Schlagweiten für den Schlägervorschlag.
+
+Im Simulator ausprobieren:
+
+```sh
+.pio/build/simulator/program --serve 8080     # dann http://127.0.0.1:8080/ öffnen
+```
+
+Die Schnittstelle dahinter (`/api/...`) ist in `lib/core/src/core/api.h`
+beschrieben. Sie ist nicht passwortgeschützt und nur für das eigene WLAN gedacht.
+Die WLAN-Anbindung auf dem Gerät selbst folgt mit den Gerätetreibern.
+
 ## Stand
 
-Schritt 9 von 13: Der Kern ist fertig und speichert sicher gegen Stromausfall.
-Der Simulator zeigt alle Ansichten, bedienbar über Knöpfe und Touch, und
-spielt GPS-Aufzeichnungen ab. Szenario-Tests spielen ganze Runden durch,
-Screenshot-Tests sichern das Aussehen jeder Ansicht.
-Der Display-Treiber für das Gerät fehlt noch; die Firmware zeichnet vorerst
-in einen Platzhalter-Puffer.
+Schritt 10 von 13: Der Kern ist fertig und speichert sicher gegen Stromausfall.
+Der Simulator zeigt alle Ansichten, spielt GPS-Aufzeichnungen ab und bedient
+die Web-Oberfläche fürs Handy. Szenario-, Screenshot- und Browser-Tests laufen
+bei jedem Push.
+Auf dem Gerät fehlen noch Display-Treiber, GPS-Anschluss und WLAN; die Firmware
+zeichnet vorerst in einen Platzhalter-Puffer.

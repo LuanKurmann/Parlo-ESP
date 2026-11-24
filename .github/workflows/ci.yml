@@ -14,6 +14,10 @@ jobs:
         with:
           python-version: "3.12"
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
       - uses: actions/cache@v4
         with:
           path: ~/.platformio
@@ -50,6 +54,12 @@ jobs:
           name: screenshot_failures
           path: screenshot_failures/
           if-no-files-found: ignore
+
+      - name: Web-Oberfläche testen (Rechenlogik und Browser gegen den Simulator)
+        run: |
+          npm install --no-save playwright@1.63.0
+          npx playwright install --with-deps chromium
+          node --test web/test/*.test.js
 
       - name: GPS-Aufzeichnung im Simulator abspielen
         run: |

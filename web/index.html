@@ -1,1 +1,79 @@
-<!doctype html><meta charset="utf-8"><title>Golf-Tracker</title><p>Platzhalter</p>
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b0f0d">
+  <title>Golf-Tracker</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top">
+    <h1>Golf-Tracker</h1>
+    <p id="status" class="muted">Verbinde mit dem Gerät …</p>
+  </header>
+
+  <nav class="tabs" aria-label="Bereiche">
+    <button type="button" data-tab="rounds" aria-pressed="true">Runden</button>
+    <button type="button" data-tab="course" aria-pressed="false">Platz</button>
+    <button type="button" data-tab="clubs" aria-pressed="false">Schläger</button>
+  </nav>
+
+  <main>
+    <!-- Runden -->
+    <section id="tab-rounds">
+      <div id="rounds-overview">
+        <h2>Laufende Runde</h2>
+        <div id="current-round" class="card"></div>
+        <h2>Gespielte Runden</h2>
+        <div id="round-list"></div>
+        <h2>Schlagweiten aus deinen Runden</h2>
+        <div id="club-stats"></div>
+      </div>
+      <div id="round-detail" hidden></div>
+    </section>
+
+    <!-- Platz -->
+    <section id="tab-course" hidden>
+      <h2>Platz auf dem Gerät</h2>
+      <div id="course-current"></div>
+
+      <h2>Platz aus OpenStreetMap laden</h2>
+      <p class="muted">Dafür braucht das Handy Internet. Erfasst sind nur Plätze, die Freiwillige in OpenStreetMap eingetragen haben.</p>
+      <form id="search-form" class="row">
+        <label class="grow">
+          <span class="label">Name des Golfplatzes</span>
+          <input id="search-name" type="search" autocomplete="off" required minlength="3" placeholder="z. B. Golfclub Beispiel">
+        </label>
+        <button type="submit" class="primary">Suchen</button>
+      </form>
+      <div id="search-results"></div>
+      <div id="import-preview" hidden></div>
+
+      <h2>Platzdatei</h2>
+      <p class="muted">Zum Sichern oder Zurückspielen eines Platzes, auch mit selbst markierten Grüns.</p>
+      <div class="row">
+        <button type="button" id="course-export">Platz herunterladen</button>
+        <label class="file-button">Platzdatei laden<input id="course-file" type="file" accept=".json,application/json"></label>
+      </div>
+    </section>
+
+    <!-- Schläger -->
+    <section id="tab-clubs" hidden>
+      <h2>Deine Schlagweiten</h2>
+      <p class="muted">Danach richtet sich der Schlägervorschlag auf dem Gerät.</p>
+      <form id="clubs-form">
+        <div id="club-inputs"></div>
+        <button type="submit" class="primary">Speichern</button>
+      </form>
+    </section>
+  </main>
+
+  <div id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="geo.js"></script>
+  <script src="stats.js"></script>
+  <script src="osm.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
