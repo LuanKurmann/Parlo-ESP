@@ -12,7 +12,7 @@
 // Aufruf:
 //   program [--data <ordner>] [--headless] [--do <befehle>]
 //           [--replay <datei.nmea>] [--speed <faktor>] [--demo-track <datei.nmea>]
-//           [--serve <port>] [--web <ordner>]
+//           [--serve <port>] [--web <ordner>] [--link <port>] [--link-packet <bytes>]
 //
 //   --data      Ordner fuer Platz und Runden (Standard: sim_data)
 //   --no-course beginnt ohne Platzdaten statt mit dem Beispielplatz
@@ -23,6 +23,11 @@
 //               Web-Oberflaeche ist dann unter http://127.0.0.1:<port>/ erreichbar.
 //               Mit --headless laeuft der Simulator dabei weiter, bis er beendet wird.
 //   --web       Ordner der Web-Oberflaeche (Standard: web)
+//   --link      stellt das Bluetooth-Protokoll ueber TCP bereit (127.0.0.1:<port>),
+//               damit eine App ohne Bluetooth dagegen getestet werden kann.
+//               Siehe docs/bluetooth-protokoll.md.
+//   --link-packet  groesstes Stueck, das der Simulator sendet (Standard: 180,
+//               wie ein uebliches Bluetooth-Paket)
 //   --demo-track  schreibt eine Beispielaufzeichnung (drei Loecher des
 //               Beispielplatzes) in die Datei und beendet sich
 //   --headless  ohne Fenster; beendet sich nach den Befehlen. Ohne --data
@@ -68,6 +73,7 @@
 #include "core/nmea_log.h"
 #include "demo_track.h"
 #include "http_server.h"
+#include "link_tcp.h"
 #include "screenshot.h"
 #include "ui/ui.h"
 
@@ -351,6 +357,8 @@ int main(int argc, char** argv) {
     double speed = 10.0;
     int serve_port = 0;
     std::string web_dir = "web";
+    int link_port = 0;
+    int link_packet = 180;
     for (int i = 1; i < argc; i++) {
         const std::string arg = argv[i];
         if (arg == "--headless" || arg == "--smoke") {
@@ -365,6 +373,10 @@ int main(int argc, char** argv) {
             replay_path = argv[++i];
         } else if (arg == "--serve" && i + 1 < argc) {
             serve_port = std::atoi(argv[++i]);
+        } else if (arg == "--link" && i + 1 < argc) {
+            link_port = std::atoi(argv[++i]);
+        } else if (arg == "--link-packet" && i + 1 < argc) {
+            link_packet = std::atoi(argv[++i]);
         } else if (arg == "--web" && i + 1 < argc) {
             web_dir = argv[++i];
         } else if (arg == "--speed" && i + 1 < argc) {
@@ -437,10 +449,21 @@ int main(int argc, char** argv) {
         std::fflush(stdout);
     }
 
+    sim::LinkTcp link;
+    if (link_port > 0) {
+        if (!link.start(link_port, static_cast<size_t>(link_packet > 0 ? link_packet : 180))) {
+            std::fprintf(stderr, "Port %d laesst sich nicht oeffnen\n", link_port);
+            return 1;
+        }
+        std::printf("Bluetooth-Protokoll ueber TCP: 127.0.0.1:%d\n", link_port);
+        std::fflush(stdout);
+    }
+
     if (!simulator.runAll(commands)) return 1;
-    if (headless && serve_port > 0) {
+    if (headless && (serve_port > 0 || link_port > 0)) {
         for (;;) { // als Server weiterlaufen, bis der Prozess beendet wird
             if (server.poll(*simulator.session, &simulator.network)) simulator.apply();
+            if (link.poll(*simulator.session, &simulator.network)) simulator.apply();
             lv_timer_handler();
             SDL_Delay(5);
         }
@@ -489,6 +512,7 @@ int main(int argc, char** argv) {
         }
 
         if (serve_port > 0) server.poll(*simulator.session, &simulator.network);
+        if (link_port > 0) link.poll(*simulator.session, &simulator.network);
         simulator.apply();
         SDL_Delay(5);
     }

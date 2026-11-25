@@ -61,6 +61,9 @@ jobs:
           npx playwright install --with-deps chromium
           node --test web/test/*.test.js
 
+      - name: Bluetooth-Protokoll gegen den Simulator testen
+        run: node --test tools/link/*.test.js
+
       - name: GPS-Aufzeichnung im Simulator abspielen
         run: |
           .pio/build/simulator/program --demo-track demo.nmea

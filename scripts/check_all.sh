@@ -14,6 +14,8 @@ echo "== Screenshot-Tests"
 python3 tools/screenshot_test.py
 echo "== Web-Oberflaeche"
 node --test web/test/*.test.js
+echo "== Bluetooth-Protokoll gegen den Simulator"
+node --test tools/link/*.test.js
 echo "== Hilfsprogramme"
 python3 -m unittest discover -s tools
 echo "== Firmware bauen"

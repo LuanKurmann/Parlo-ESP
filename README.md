@@ -10,10 +10,10 @@ GPS, zwei Knöpfe): Distanz zum Grün, Schläge, Schlägerwahl und Scorecard.
 | `lib/core` | Kern ohne Hardware und ohne LVGL: Berechnungen, Runde, Logik. Vollständig auf dem PC testbar. |
 | `lib/ui` | Oberfläche mit LVGL. Läuft unverändert auf dem Gerät und im Simulator. |
 | `src/device` | Firmware für das Gerät: Treiber und Verdrahtung mit dem Kern. |
-| `docs` | Inbetriebnahme auf dem Gerät. |
+| `docs` | Stand, Inbetriebnahme, Plan der App, Bluetooth-Protokoll. |
 | `src/simulator` | Einstieg des PC-Simulators (SDL2-Fenster). |
 | `test` | Unit- und Szenario-Tests für den Kern. |
-| `tools` | Hilfsprogramme für den PC (GPX-Umwandler, Screenshot-Tests). |
+| `tools` | Hilfsprogramme für den PC (GPX-Umwandler, Screenshot-Tests, Referenz-Client für das Bluetooth-Protokoll). |
 | `web` | Web-Oberfläche fürs Handy: Runden auswerten, Platz laden, Schlagweiten einstellen. |
 
 ## Befehle
@@ -27,6 +27,7 @@ pio test -e native_sanitize              # dieselben Tests mit Speicherfehler-Er
 pio run -e simulator                     # Simulator bauen
 python3 tools/screenshot_test.py         # jede Ansicht mit ihrem Referenzbild vergleichen
 node --test web/test/*.test.js           # Web-Oberfläche testen (braucht Node 22 und Playwright)
+node --test tools/link/*.test.js         # Bluetooth-Protokoll gegen den Simulator testen
 .pio/build/simulator/program             # Simulator starten (Tasten siehe unten)
 pio run -e device                        # Firmware bauen
 pio run -e device -t upload              # Firmware aufs Gerät laden

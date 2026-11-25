@@ -100,6 +100,12 @@ und zufällige Bedienung.
 - **Web-Oberfläche:** ohne Passwort, nur fürs eigene WLAN gedacht.
 - **Uhrzeit:** Rundenbeginn ist UTC; die Web-Oberfläche rechnet in Ortszeit um.
 
+## Vorbereitung für die App (nach dem 24. November)
+
+Erledigt und getestet: dauerhafte Kennungen (F1), wählbares Bag (F2),
+Einstellungen für Display und Knöpfe (F3), Übertragungsprotokoll für Bluetooth
+mit TCP-Zugang im Simulator (F4). Die Schnittstelle meldet Version 3.
+
 ## Nächste Schritte
 
 1. Board in Betrieb nehmen (Schritt 12).

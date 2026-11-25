@@ -69,8 +69,8 @@ schreibt), einer für Antworten (Gerät meldet). Eine Anfrage ist dasselbe wie
 heute über WLAN, nur verpackt:
 
 ```
-Anfrage   {"id": 7, "m": "GET", "p": "/api/rounds/3"}
-Antwort   {"id": 7, "s": 200, "b": { ... }}
+Anfrage   7\nGET /api/rounds/id/00aa11bb22cc33dd\n
+Antwort   7\n200\n{ ... }
 ```
 
 Weil ein Bluetooth-Paket klein ist (meist 180 bis 500 Bytes), wird jede
@@ -181,7 +181,7 @@ Alles davon ist im Kern testbar, bevor die App existiert.
 | F1 | Dauerhafte Kennung für Runden und Plätze, Änderungszähler für Plätze, Versionsnummer der Schnittstelle | ja – **erledigt** |
 | F2 | Wählbare Schlägerliste statt fester elf Schläger; Schlägerwahl am Gerät passt sich an | ja, inklusive Screenshots – **erledigt** |
 | F3 | Einstellungen erweitern (Helligkeit, Dimmzeit, Knöpfe tauschen) | ja – **erledigt** |
-| F4 | Nachrichten in Stücke zerlegen und zusammensetzen; Simulator spricht dasselbe über TCP | ja |
+| F4 | Nachrichten in Stücke zerlegen und zusammensetzen; Simulator spricht dasselbe über TCP | ja – **erledigt**, beschrieben in [bluetooth-protokoll.md](bluetooth-protokoll.md) |
 | F5 | Bluetooth-Dienst auf dem Gerät, Koppeln mit Code auf dem Display | nur kompilieren |
 
 Das Dateiformat bleibt abwärtskompatibel: Alte Runden ohne Kennung erhalten
