@@ -1,6 +1,6 @@
 # Plan: Flutter-App zum Golf-Tracker
 
-Stand: Schritte 1 bis 5 erledigt, das Gerüst der App liegt in `app/`. Grundlage sind die Antworten vom
+Stand: Schritte 1 bis 6 erledigt; die App liegt in `app/`. Grundlage sind die Antworten vom
 24. November 2026:
 
 | Frage | Entscheid |
@@ -214,7 +214,7 @@ Reihenfolge so, dass möglichst lange ohne Board gearbeitet werden kann.
 **App**
 
 5. Projektgerüst in `app/`, GitHub Actions (Analyse, Tests, Android-Build, iOS-Build ohne Signatur). **Erledigt:** vier Bereiche mit leerem Zustand, Flutter 3.50.1, Ablauf `.github/workflows/app.yml`.
-6. Datenmodell und lokale Datenbank, Export und Import.
+6. Datenmodell und lokale Datenbank, Export und Import. **Erledigt:** Modell im Format des Geräts, geprüft gegen gemeinsame Testdaten (`testdata/format`); Datenbank mit Runden, Plätzen, Einstellungen; Sicherung in eine Datei und zurück. Der CSV-Export einzelner Runden folgt mit der Auswertung in Schritt 8.
 7. Geräte-Client und Abgleich, getestet gegen den Simulator.
 8. Runden: Liste, Detail, Verlauf und Schlägerstatistik.
 9. Plätze: Suche, Bibliothek, Kartenvorschau, aufs Gerät laden.

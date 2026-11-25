@@ -1,0 +1,68 @@
+[
+ {
+  "kind": "course",
+  "why": "Name fehlt, Aenderungszaehler ohne Kennung, unbekannte Schluessel",
+  "json": "{\"v\":1,\"rev\":5,\"extra\":true,\"holes\":[{\"par\":3,\"foo\":1}]}",
+  "canonical": "{\"v\":1,\"name\":\"\",\"holes\":[{\"par\":3}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Name null",
+  "json": "{\"v\":1,\"name\":null,\"holes\":[{\"par\":3}]}",
+  "canonical": "{\"v\":1,\"name\":\"\",\"holes\":[{\"par\":3}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Radius ohne Gruen entfaellt, Gruen ohne Radius bekommt 13 m",
+  "json": "{\"v\":1,\"name\":\"A\",\"holes\":[{\"par\":3,\"r\":200},{\"par\":4,\"green\":[10,-20]}]}",
+  "canonical": "{\"v\":1,\"name\":\"A\",\"holes\":[{\"par\":3},{\"par\":4,\"green\":[10,-20],\"r\":130}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Kennung ohne Zaehler, Name mit 31 Zeichen, Reihenfolge egal",
+  "json": "{\"holes\":[{\"tee\":[1,2],\"par\":5}],\"name\":\"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN\",\"id\":\"ffffffffffffffff\",\"v\":1}",
+  "canonical": "{\"v\":1,\"id\":\"ffffffffffffffff\",\"rev\":0,\"name\":\"NNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN\",\"holes\":[{\"par\":5,\"tee\":[1,2]}]}"
+ },
+ {
+  "kind": "course",
+  "why": "15 Umlaute sind 30 Bytes",
+  "json": "{\"v\":1,\"name\":\"üüüüüüüüüüüüüüü\",\"holes\":[{\"par\":0}]}",
+  "canonical": "{\"v\":1,\"name\":\"üüüüüüüüüüüüüüü\",\"holes\":[{\"par\":0}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Platzname fehlt, kein Datum, keine Kennungen",
+  "json": "{\"v\":1,\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}]}",
+  "canonical": "{\"v\":1,\"course\":\"\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "20 Schlaege, Schluessel in anderer Reihenfolge",
+  "json": "{\"holes\":[{\"shots\":[{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]},{\"c\":\"Pt\",\"p\":[1,2]}],\"done\":true,\"par\":6}],\"hole\":0,\"course\":\"Y\",\"v\":1}",
+  "canonical": "{\"v\":1,\"course\":\"Y\",\"hole\":0,\"holes\":[{\"par\":6,\"done\":true,\"shots\":[{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"},{\"p\":[1,2],\"c\":\"Pt\"}]}]}"
+ },
+ {
+  "kind": "settings",
+  "why": "nur Helligkeit, Rest bleibt Standard",
+  "json": "{\"v\":1,\"brightness\":255}",
+  "canonical": "{\"v\":1,\"carry\":{\"Dr\":210,\"H3\":190,\"H5\":180,\"H7\":170,\"Hy\":175,\"E3\":180,\"E4\":170,\"E5\":160,\"E6\":150,\"E7\":140,\"E8\":128,\"E9\":116,\"PW\":100,\"GW\":85,\"SW\":70,\"LW\":55},\"clubs\":[\"Dr\",\"H3\",\"Hy\",\"E5\",\"E6\",\"E7\",\"E8\",\"E9\",\"PW\",\"SW\",\"Pt\"],\"brightness\":255,\"dim_s\":20,\"swap_buttons\":false}"
+ },
+ {
+  "kind": "settings",
+  "why": "eine Schlagweite",
+  "json": "{\"v\":1,\"carry\":{\"E7\":145}}",
+  "canonical": "{\"v\":1,\"carry\":{\"Dr\":210,\"H3\":190,\"H5\":180,\"H7\":170,\"Hy\":175,\"E3\":180,\"E4\":170,\"E5\":160,\"E6\":150,\"E7\":145,\"E8\":128,\"E9\":116,\"PW\":100,\"GW\":85,\"SW\":70,\"LW\":55},\"clubs\":[\"Dr\",\"H3\",\"Hy\",\"E5\",\"E6\",\"E7\",\"E8\",\"E9\",\"PW\",\"SW\",\"Pt\"],\"brightness\":200,\"dim_s\":20,\"swap_buttons\":false}"
+ },
+ {
+  "kind": "settings",
+  "why": "Bag ohne Putter und unsortiert: Putter kommt dazu, Reihenfolge des Katalogs",
+  "json": "{\"v\":1,\"clubs\":[\"SW\",\"Dr\"]}",
+  "canonical": "{\"v\":1,\"carry\":{\"Dr\":210,\"H3\":190,\"H5\":180,\"H7\":170,\"Hy\":175,\"E3\":180,\"E4\":170,\"E5\":160,\"E6\":150,\"E7\":140,\"E8\":128,\"E9\":116,\"PW\":100,\"GW\":85,\"SW\":70,\"LW\":55},\"clubs\":[\"Dr\",\"SW\",\"Pt\"],\"brightness\":200,\"dim_s\":20,\"swap_buttons\":false}"
+ },
+ {
+  "kind": "settings",
+  "why": "14 Schlaeger",
+  "json": "{\"v\":1,\"clubs\":[\"Dr\",\"H3\",\"H5\",\"H7\",\"Hy\",\"E3\",\"E4\",\"E5\",\"E6\",\"E7\",\"E8\",\"E9\",\"PW\",\"Pt\"],\"dim_s\":5,\"swap_buttons\":true}",
+  "canonical": "{\"v\":1,\"carry\":{\"Dr\":210,\"H3\":190,\"H5\":180,\"H7\":170,\"Hy\":175,\"E3\":180,\"E4\":170,\"E5\":160,\"E6\":150,\"E7\":140,\"E8\":128,\"E9\":116,\"PW\":100,\"GW\":85,\"SW\":70,\"LW\":55},\"clubs\":[\"Dr\",\"H3\",\"H5\",\"H7\",\"Hy\",\"E3\",\"E4\",\"E5\",\"E6\",\"E7\",\"E8\",\"E9\",\"PW\",\"Pt\"],\"brightness\":200,\"dim_s\":5,\"swap_buttons\":true}"
+ }
+]

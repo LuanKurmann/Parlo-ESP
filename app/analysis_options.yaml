@@ -4,6 +4,8 @@ analyzer:
   exclude:
     # erzeugt von flutter gen-l10n
     - lib/l10n/app_localizations*.dart
+    # erzeugt von build_runner (Drift)
+    - "**/*.g.dart"
     - build/**
     - android/**
     - ios/**

@@ -109,4 +109,4 @@ mit TCP-Zugang im Simulator (F4). Die Schnittstelle meldet Version 3.
 ## Nächste Schritte
 
 1. Board in Betrieb nehmen (Schritt 12).
-2. Flutter-App mit Bluetooth-Abgleich: siehe [flutter-app-plan.md](flutter-app-plan.md). Das Projektgerüst liegt in `app/`; als Nächstes folgen Datenmodell und Datenbank.
+2. Flutter-App mit Bluetooth-Abgleich: siehe [flutter-app-plan.md](flutter-app-plan.md). Gerüst, Datenmodell und Datenbank liegen in `app/`; als Nächstes folgt der Abgleich gegen den Simulator.

@@ -4,12 +4,16 @@ on:
   push:
     paths:
       - 'app/**'
-      - 'lib/core/src/core/api.h'
+      - 'lib/core/src/core/**'
+      - 'testdata/format/**'
+      - 'scripts/check_app.sh'
       - '.github/workflows/app.yml'
   pull_request:
     paths:
       - 'app/**'
-      - 'lib/core/src/core/api.h'
+      - 'lib/core/src/core/**'
+      - 'testdata/format/**'
+      - 'scripts/check_app.sh'
       - '.github/workflows/app.yml'
 
 env:
@@ -33,14 +37,9 @@ jobs:
           flutter-version: ${{ env.FLUTTER_VERSION }}
           channel: stable
           cache: true
-      - name: Pakete laden
-        run: flutter pub get
-      - name: Formatierung pruefen
-        run: dart format --output=none --set-exit-if-changed lib test
-      - name: Analyse
-        run: flutter analyze --fatal-infos
-      - name: Tests
-        run: flutter test
+      - name: Erzeugter Code, Formatierung, Analyse, Tests
+        working-directory: .
+        run: sh scripts/check_app.sh
       - name: Android bauen
         run: flutter build apk --debug
       - uses: actions/upload-artifact@v4

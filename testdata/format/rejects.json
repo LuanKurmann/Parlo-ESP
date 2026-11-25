@@ -1,0 +1,477 @@
+[
+ {
+  "kind": "course",
+  "why": "kein JSON",
+  "json": "{"
+ },
+ {
+  "kind": "course",
+  "why": "leer",
+  "json": ""
+ },
+ {
+  "kind": "course",
+  "why": "Liste statt Objekt",
+  "json": "[]"
+ },
+ {
+  "kind": "course",
+  "why": "Version fehlt",
+  "json": "{\"name\":\"X\",\"course\":\"X\",\"hole\":0,\"holes\":[{\"par\":4,\"done\":false,\"shots\":[]}],\"brightness\":100}"
+ },
+ {
+  "kind": "course",
+  "why": "falsche Version",
+  "json": "{\"v\":2,\"name\":\"X\",\"course\":\"X\",\"hole\":0,\"holes\":[{\"par\":4,\"done\":false,\"shots\":[]}],\"brightness\":100}"
+ },
+ {
+  "kind": "course",
+  "why": "Version als Text",
+  "json": "{\"v\":\"1\",\"name\":\"X\",\"course\":\"X\",\"hole\":0,\"holes\":[{\"par\":4,\"done\":false,\"shots\":[]}],\"brightness\":100}"
+ },
+ {
+  "kind": "round",
+  "why": "kein JSON",
+  "json": "{"
+ },
+ {
+  "kind": "round",
+  "why": "leer",
+  "json": ""
+ },
+ {
+  "kind": "round",
+  "why": "Liste statt Objekt",
+  "json": "[]"
+ },
+ {
+  "kind": "round",
+  "why": "Version fehlt",
+  "json": "{\"name\":\"X\",\"course\":\"X\",\"hole\":0,\"holes\":[{\"par\":4,\"done\":false,\"shots\":[]}],\"brightness\":100}"
+ },
+ {
+  "kind": "round",
+  "why": "falsche Version",
+  "json": "{\"v\":2,\"name\":\"X\",\"course\":\"X\",\"hole\":0,\"holes\":[{\"par\":4,\"done\":false,\"shots\":[]}],\"brightness\":100}"
+ },
+ {
+  "kind": "round",
+  "why": "Version als Text",
+  "json": "{\"v\":\"1\",\"name\":\"X\",\"course\":\"X\",\"hole\":0,\"holes\":[{\"par\":4,\"done\":false,\"shots\":[]}],\"brightness\":100}"
+ },
+ {
+  "kind": "settings",
+  "why": "kein JSON",
+  "json": "{"
+ },
+ {
+  "kind": "settings",
+  "why": "leer",
+  "json": ""
+ },
+ {
+  "kind": "settings",
+  "why": "Liste statt Objekt",
+  "json": "[]"
+ },
+ {
+  "kind": "settings",
+  "why": "Version fehlt",
+  "json": "{\"name\":\"X\",\"course\":\"X\",\"hole\":0,\"holes\":[{\"par\":4,\"done\":false,\"shots\":[]}],\"brightness\":100}"
+ },
+ {
+  "kind": "settings",
+  "why": "falsche Version",
+  "json": "{\"v\":2,\"name\":\"X\",\"course\":\"X\",\"hole\":0,\"holes\":[{\"par\":4,\"done\":false,\"shots\":[]}],\"brightness\":100}"
+ },
+ {
+  "kind": "settings",
+  "why": "Version als Text",
+  "json": "{\"v\":\"1\",\"name\":\"X\",\"course\":\"X\",\"hole\":0,\"holes\":[{\"par\":4,\"done\":false,\"shots\":[]}],\"brightness\":100}"
+ },
+ {
+  "kind": "course",
+  "why": "keine Loecher",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[]}"
+ },
+ {
+  "kind": "course",
+  "why": "Loecher fehlen",
+  "json": "{\"v\":1,\"name\":\"X\"}"
+ },
+ {
+  "kind": "course",
+  "why": "19 Loecher",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4},{\"par\":4}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Par 2",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":2}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Par 1",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":1}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Par 7",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":7}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Par negativ",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":-1}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Par fehlt",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Par als Kommazahl",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4.5}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Par als Text",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":\"4\"}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Loch ist kein Objekt",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[4]}"
+ },
+ {
+  "kind": "course",
+  "why": "Name ist Zahl",
+  "json": "{\"v\":1,\"name\":5,\"holes\":[{\"par\":4}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Name zu lang (32 Zeichen)",
+  "json": "{\"v\":1,\"name\":\"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\",\"holes\":[{\"par\":4}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Name zu lang in Bytes (16 Umlaute)",
+  "json": "{\"v\":1,\"name\":\"ääääääääääääääää\",\"holes\":[{\"par\":4}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Name mit Zeilenumbruch",
+  "json": "{\"v\":1,\"name\":\"A\\nB\",\"holes\":[{\"par\":4}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Kennung zu kurz",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4}],\"id\":\"00aa11bb22cc33d\"}"
+ },
+ {
+  "kind": "course",
+  "why": "Kennung mit Grossbuchstaben",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4}],\"id\":\"00AA11BB22CC33DD\"}"
+ },
+ {
+  "kind": "course",
+  "why": "Kennung ist Zahl",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4}],\"id\":12}"
+ },
+ {
+  "kind": "course",
+  "why": "Aenderungszaehler negativ",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4}],\"id\":\"00aa11bb22cc33dd\",\"rev\":-1}"
+ },
+ {
+  "kind": "course",
+  "why": "Aenderungszaehler zu gross",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4}],\"id\":\"00aa11bb22cc33dd\",\"rev\":2000000001}"
+ },
+ {
+  "kind": "course",
+  "why": "Gruen mit einer Zahl",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4,\"green\":[473800000]}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Gruen mit drei Zahlen",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4,\"green\":[1,2,3]}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Gruen als Kommazahlen",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4,\"green\":[47.38,8.54]}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Breite ueber 90 Grad",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4,\"green\":[900000001,0]}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Laenge unter -180 Grad",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4,\"green\":[0,-1800000001]}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Abschlag ist Text",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4,\"tee\":\"hier\"}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Radius zu klein",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4,\"green\":[1,2],\"r\":9}]}"
+ },
+ {
+  "kind": "course",
+  "why": "Radius zu gross",
+  "json": "{\"v\":1,\"name\":\"X\",\"holes\":[{\"par\":4,\"green\":[1,2],\"r\":601}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Loch ausserhalb",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":1,\"holes\":[{\"done\":false,\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Loch negativ",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":-1,\"holes\":[{\"done\":false,\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Loch fehlt",
+  "json": "{\"v\":1,\"course\":\"X\",\"holes\":[{\"done\":false,\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "keine Loecher",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[]}"
+ },
+ {
+  "kind": "round",
+  "why": "19 Loecher",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]},{\"done\":false,\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "done fehlt",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "done als Zahl",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":1,\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "shots fehlt",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false}]}"
+ },
+ {
+  "kind": "round",
+  "why": "abgeschlossen ohne Schlag",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":true,\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "21 Schlaege",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "unbekannter Schlaeger",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[{\"c\":\"E2\"}]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Schlaeger ist Zahl",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[{\"c\":7}]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Schlag ist kein Objekt",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[\"Dr\"]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Position mit Text",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[{\"p\":[\"a\",\"b\"]}]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Position ausserhalb",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[{\"p\":[0,1800000001]}]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Par 0 im Loch",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"par\":0,\"done\":false,\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Par 2 im Loch",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"par\":2,\"done\":false,\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Gruen kaputt",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"green\":[1],\"done\":false,\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Datum ohne Uhrzeit",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}],\"date\":\"2026-11-23\"}"
+ },
+ {
+  "kind": "round",
+  "why": "Datum mit Sekunden",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}],\"date\":\"2026-11-23T08:15:00\"}"
+ },
+ {
+  "kind": "round",
+  "why": "Monat 13",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}],\"date\":\"2026-13-23T08:15\"}"
+ },
+ {
+  "kind": "round",
+  "why": "Stunde 24",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}],\"date\":\"2026-11-23T24:15\"}"
+ },
+ {
+  "kind": "round",
+  "why": "Jahr 1999",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}],\"date\":\"1999-11-23T08:15\"}"
+ },
+ {
+  "kind": "round",
+  "why": "Datum ist Zahl",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}],\"date\":20261123}"
+ },
+ {
+  "kind": "round",
+  "why": "Kennung ungueltig",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}],\"id\":\"xyz\"}"
+ },
+ {
+  "kind": "round",
+  "why": "Platzkennung ungueltig",
+  "json": "{\"v\":1,\"course\":\"X\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}],\"course_id\":\"00aa11bb22cc33dg\"}"
+ },
+ {
+  "kind": "round",
+  "why": "Platzname zu lang",
+  "json": "{\"v\":1,\"course\":\"BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB\",\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}]}"
+ },
+ {
+  "kind": "round",
+  "why": "Platzname ist Liste",
+  "json": "{\"v\":1,\"course\":[],\"hole\":0,\"holes\":[{\"done\":false,\"shots\":[]}]}"
+ },
+ {
+  "kind": "settings",
+  "why": "keine bekannte Angabe",
+  "json": "{\"v\":1}"
+ },
+ {
+  "kind": "settings",
+  "why": "nur Unbekanntes",
+  "json": "{\"v\":1,\"foo\":1}"
+ },
+ {
+  "kind": "settings",
+  "why": "Helligkeit zu klein",
+  "json": "{\"v\":1,\"brightness\":19}"
+ },
+ {
+  "kind": "settings",
+  "why": "Helligkeit zu gross",
+  "json": "{\"v\":1,\"brightness\":256}"
+ },
+ {
+  "kind": "settings",
+  "why": "Helligkeit als Text",
+  "json": "{\"v\":1,\"brightness\":\"200\"}"
+ },
+ {
+  "kind": "settings",
+  "why": "Dimmzeit zu klein",
+  "json": "{\"v\":1,\"dim_s\":4}"
+ },
+ {
+  "kind": "settings",
+  "why": "Dimmzeit zu gross",
+  "json": "{\"v\":1,\"dim_s\":601}"
+ },
+ {
+  "kind": "settings",
+  "why": "Knoepfe als Zahl",
+  "json": "{\"v\":1,\"swap_buttons\":1}"
+ },
+ {
+  "kind": "settings",
+  "why": "Schlagweite 0",
+  "json": "{\"v\":1,\"carry\":{\"Dr\":0}}"
+ },
+ {
+  "kind": "settings",
+  "why": "Schlagweite 401",
+  "json": "{\"v\":1,\"carry\":{\"Dr\":401}}"
+ },
+ {
+  "kind": "settings",
+  "why": "Schlagweite fuer Putter",
+  "json": "{\"v\":1,\"carry\":{\"Pt\":5}}"
+ },
+ {
+  "kind": "settings",
+  "why": "unbekannter Schlaeger in carry",
+  "json": "{\"v\":1,\"carry\":{\"E2\":150}}"
+ },
+ {
+  "kind": "settings",
+  "why": "carry ist Liste",
+  "json": "{\"v\":1,\"carry\":[210]}"
+ },
+ {
+  "kind": "settings",
+  "why": "unbekannter Schlaeger im Bag",
+  "json": "{\"v\":1,\"clubs\":[\"Dr\",\"XX\"]}"
+ },
+ {
+  "kind": "settings",
+  "why": "Schlaeger doppelt",
+  "json": "{\"v\":1,\"clubs\":[\"Dr\",\"Dr\",\"E7\"]}"
+ },
+ {
+  "kind": "settings",
+  "why": "nur Putter",
+  "json": "{\"v\":1,\"clubs\":[\"Pt\"]}"
+ },
+ {
+  "kind": "settings",
+  "why": "leeres Bag",
+  "json": "{\"v\":1,\"clubs\":[]}"
+ },
+ {
+  "kind": "settings",
+  "why": "15 Schlaeger",
+  "json": "{\"v\":1,\"clubs\":[\"Dr\",\"H3\",\"H5\",\"H7\",\"Hy\",\"E3\",\"E4\",\"E5\",\"E6\",\"E7\",\"E8\",\"E9\",\"PW\",\"GW\",\"SW\"]}"
+ },
+ {
+  "kind": "settings",
+  "why": "clubs ist Text",
+  "json": "{\"v\":1,\"clubs\":\"Dr\"}"
+ },
+ {
+  "kind": "settings",
+  "why": "Schlaeger als Zahl",
+  "json": "{\"v\":1,\"clubs\":[1,2]}"
+ },
+ {
+  "kind": "settings",
+  "why": "gute Helligkeit, schlechtes Bag",
+  "json": "{\"v\":1,\"brightness\":100,\"clubs\":[\"Pt\"]}"
+ }
+]

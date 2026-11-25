@@ -22,10 +22,8 @@ echo "== Firmware bauen"
 pio run -e device
 
 if command -v flutter >/dev/null 2>&1; then
-  echo "== App: Formatierung, Analyse, Tests"
-  (cd app && flutter pub get >/dev/null \
-    && dart format --output=none --set-exit-if-changed lib test \
-    && flutter analyze --fatal-infos && flutter test)
+  echo "== App"
+  sh scripts/check_app.sh
 else
   echo "== App uebersprungen: flutter nicht installiert"
 fi
