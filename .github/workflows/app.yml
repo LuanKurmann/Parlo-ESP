@@ -40,8 +40,22 @@ jobs:
       - name: Erzeugter Code, Formatierung, Analyse, Tests
         working-directory: .
         run: sh scripts/check_app.sh
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('app/android/**/*.kts', 'app/android/gradle/wrapper/gradle-wrapper.properties', 'app/pubspec.lock') }}
+          restore-keys: gradle-${{ runner.os }}-
       - name: Android bauen
-        run: flutter build apk --debug
+        # Die Paketserver weisen Anfragen gelegentlich ab (429); dann nochmals.
+        run: |
+          for versuch in 1 2 3; do
+            flutter build apk --debug && exit 0
+            echo "Build fehlgeschlagen (Versuch $versuch), warte ..."
+            sleep $((versuch * 45))
+          done
+          exit 1
       - uses: actions/upload-artifact@v4
         with:
           name: parlo-android-debug
