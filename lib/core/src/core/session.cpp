@@ -50,15 +50,22 @@ bool Session::replaceCourse(const Course& course, bool* archived) {
     return sync();
 }
 
-bool Session::setBag(const Bag& bag) {
-    if (!store_.saveBag(bag)) return false;
+bool Session::setBag(const Bag& bag) { return setSettings(bag, device_settings_); }
+
+bool Session::setSettings(const Bag& bag, const DeviceSettings& device) {
+    if (!store_.saveSettings(bag, device)) return false;
     app_.setBag(bag);
+    device_settings_ = device;
     return true;
 }
 
 Session::Session(FileSystem& fs, RandomFn random) : store_(fs), random_(random), app_(loadCourseOrEmpty(store_)) {
     Bag bag;
-    if (store_.loadBag(bag)) app_.setBag(bag);
+    DeviceSettings device;
+    if (store_.loadSettings(bag, device)) {
+        app_.setBag(bag);
+        device_settings_ = device;
+    }
 
     // Was jetzt im Speicher liegt, muss nicht gleich wieder geschrieben werden.
     Course stored;

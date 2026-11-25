@@ -390,7 +390,41 @@
   }
 
   function loadBag() {
-    return api('GET', '/api/settings').then(function (bag) { state.bag = bag; renderClubInputs(); });
+    return api('GET', '/api/settings').then(function (bag) { state.bag = bag; renderClubInputs(); renderDeviceSettings(); });
+  }
+
+  // ---------- Geraet: Display und Knoepfe ----------
+
+  function showBrightness() {
+    $('brightness-value').textContent = Math.round($('brightness').value / 255 * 100) + ' %';
+  }
+
+  function renderDeviceSettings() {
+    var settings = state.bag;
+    if (!settings || settings.brightness === undefined) { // aeltere Firmware
+      $('device-form').hidden = true;
+      return;
+    }
+    $('brightness').value = settings.brightness;
+    var select = $('dim-after');
+    // Ein Wert, der nicht in der Liste steht (von einer App gesetzt), bekommt einen eigenen Eintrag.
+    if (!Array.prototype.some.call(select.options, function (o) { return Number(o.value) === settings.dim_s; })) {
+      select.appendChild(el('option', { value: settings.dim_s }, settings.dim_s + ' Sekunden'));
+    }
+    select.value = settings.dim_s;
+    $('swap-buttons').checked = !!settings.swap_buttons;
+    showBrightness();
+  }
+
+  function saveDeviceSettings() {
+    var changes = { v: 1, brightness: parseInt($('brightness').value, 10), dim_s: parseInt($('dim-after').value, 10),
+      swap_buttons: $('swap-buttons').checked };
+    api('PUT', '/api/settings', changes).then(function () {
+      state.bag.brightness = changes.brightness;
+      state.bag.dim_s = changes.dim_s;
+      state.bag.swap_buttons = changes.swap_buttons;
+      toast('Einstellungen gespeichert');
+    }).catch(function (e) { toast(e.message, true); });
   }
 
   function saveBag() {
@@ -427,12 +461,12 @@
     $('wifi-forget').hidden = !wifi.saved;
   }
 
-  // Den Bereich gibt es nur, wenn das Geraet sein WLAN einstellen laesst.
+  // Den Abschnitt gibt es nur, wenn das Geraet sein WLAN einstellen laesst.
   function loadWifi() {
     return fetch('/api/wifi').then(function (response) {
       if (!response.ok) return null;
       return response.json().then(function (wifi) {
-        $('device-tab-button').hidden = false;
+        $('wifi-section').hidden = false;
         renderWifi(wifi);
       });
     }, function () { return null; });
@@ -473,6 +507,8 @@
   });
   $('clubs-form').addEventListener('submit', function (event) { event.preventDefault(); saveBag(); });
   $('wifi-form').addEventListener('submit', function (event) { event.preventDefault(); saveWifi(); });
+  $('device-form').addEventListener('submit', function (event) { event.preventDefault(); saveDeviceSettings(); });
+  $('brightness').addEventListener('input', showBrightness);
   $('wifi-forget').addEventListener('click', forgetWifi);
   $('course-export').addEventListener('click', function () {
     if (state.course) download('platz.json', JSON.stringify(state.course), 'application/json');

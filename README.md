@@ -106,6 +106,7 @@ Das Gerät stellt eine Web-Oberfläche bereit, die im Handy-Browser läuft:
   Gerät laden; Platzdatei sichern und zurückspielen.
 - **Schläger:** das eigene Bag zusammenstellen (bis 14 Schläger) und
   Schlagweiten für den Schlägervorschlag eintragen.
+- **Gerät:** Helligkeit, Zeit bis zum Dimmen, Knöpfe tauschen, WLAN eintragen.
 
 Im Simulator ausprobieren:
 

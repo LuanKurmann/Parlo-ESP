@@ -284,9 +284,9 @@ Course courseOf(const RoundState& state) {
 
 // ---------- Schlaegertasche ----------
 
-std::string bagToJson(const Bag& bag) {
-    JsonDocument doc;
-    doc["v"] = kFormatVersion;
+namespace {
+
+void writeBag(JsonDocument& doc, const Bag& bag) {
     JsonObject carry = doc["carry"].to<JsonObject>();
     for (int i = 0; i < kClubCount; i++) {
         const Club club = static_cast<Club>(i);
@@ -297,17 +297,15 @@ std::string bagToJson(const Bag& bag) {
     Club list[kMaxBagClubs];
     const int count = bagClubs(bag, list);
     for (int i = 0; i < count; i++) clubs.add(clubShortName(list[i]));
-    std::string out;
-    serializeJson(doc, out);
-    return out;
 }
 
-bool bagFromJson(const std::string& json, Bag& bag) {
-    JsonDocument doc;
-    if (!parseDocument(json, doc)) return false;
+// Uebernimmt "carry" und "clubs" aus dem Dokument. `touched` wird true, wenn
+// eines von beiden vorhanden war.
+bool readBag(const JsonDocument& doc, Bag& bag, bool& touched) {
     JsonVariantConst carry_value = doc["carry"];
     JsonVariantConst clubs_value = doc["clubs"];
-    if (carry_value.isNull() && clubs_value.isNull()) return false;
+    if (carry_value.isNull() && clubs_value.isNull()) return true;
+    touched = true;
 
     Bag result = bag;
     if (!carry_value.isNull()) {
@@ -334,6 +332,69 @@ bool bagFromJson(const std::string& json, Bag& bag) {
     }
     if (!isValidBag(result)) return false;
     bag = result;
+    return true;
+}
+
+} // namespace
+
+std::string bagToJson(const Bag& bag) {
+    JsonDocument doc;
+    doc["v"] = kFormatVersion;
+    writeBag(doc, bag);
+    std::string out;
+    serializeJson(doc, out);
+    return out;
+}
+
+bool bagFromJson(const std::string& json, Bag& bag) {
+    JsonDocument doc;
+    if (!parseDocument(json, doc)) return false;
+    Bag result = bag;
+    bool touched = false;
+    if (!readBag(doc, result, touched) || !touched) return false;
+    bag = result;
+    return true;
+}
+
+// ---------- Einstellungen ----------
+
+std::string settingsToJson(const Bag& bag, const DeviceSettings& device) {
+    JsonDocument doc;
+    doc["v"] = kFormatVersion;
+    writeBag(doc, bag);
+    doc["brightness"] = device.brightness;
+    doc["dim_s"] = device.dim_after_s;
+    doc["swap_buttons"] = device.swap_buttons;
+    std::string out;
+    serializeJson(doc, out);
+    return out;
+}
+
+bool settingsFromJson(const std::string& json, Bag& bag, DeviceSettings& device) {
+    JsonDocument doc;
+    if (!parseDocument(json, doc)) return false;
+
+    Bag new_bag = bag;
+    DeviceSettings new_device = device;
+    bool touched = false;
+    if (!readBag(doc, new_bag, touched)) return false;
+
+    if (!doc["brightness"].isNull()) {
+        if (!readInt(doc["brightness"], kMinBrightness, kMaxBrightness, new_device.brightness)) return false;
+        touched = true;
+    }
+    if (!doc["dim_s"].isNull()) {
+        if (!readInt(doc["dim_s"], kMinDimAfterS, kMaxDimAfterS, new_device.dim_after_s)) return false;
+        touched = true;
+    }
+    if (!doc["swap_buttons"].isNull()) {
+        if (!doc["swap_buttons"].is<bool>()) return false;
+        new_device.swap_buttons = doc["swap_buttons"].as<bool>();
+        touched = true;
+    }
+    if (!touched) return false;
+    bag = new_bag;
+    device = new_device;
     return true;
 }
 

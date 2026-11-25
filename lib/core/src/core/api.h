@@ -11,8 +11,8 @@
 //   DELETE /api/rounds/<nr>   eine archivierte Runde loeschen
 //   GET    /api/rounds/id/<kennung>   dasselbe ueber die dauerhafte Kennung
 //   DELETE /api/rounds/id/<kennung>
-//   GET    /api/settings      Schlagweiten pro Schlaeger
-//   PUT    /api/settings      Schlagweiten setzen
+//   GET    /api/settings      Bag (Schlaeger und Schlagweiten), Helligkeit, Dimmzeit, Knoepfe
+//   PUT    /api/settings      davon setzen, was die Anfrage nennt
 //   GET    /api/wifi          WLAN-Zustand des Geraets (nie das Passwort)
 //   PUT    /api/wifi          WLAN merken: {"ssid":"...","password":"..."}
 //   DELETE /api/wifi          gespeichertes WLAN vergessen
@@ -31,7 +31,8 @@ namespace golf {
 // eine App verlassen koennte.
 //   1  erste Fassung
 //   2  dauerhafte Kennungen fuer Runden, Plaetze und das Geraet
-constexpr int kApiVersion = 2;
+//   3  waehlbares Bag; Einstellungen fuer Display und Knoepfe
+constexpr int kApiVersion = 3;
 
 // Groesste Anfrage, die angenommen wird.
 constexpr size_t kMaxApiBodyBytes = 64 * 1024;

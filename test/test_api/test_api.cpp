@@ -86,7 +86,7 @@ static void test_status() {
     TEST_ASSERT_EQUAL_INT(200, response.status);
     JsonDocument doc = parse(response);
     TEST_ASSERT_EQUAL_STRING("0.1.0", doc["version"].as<const char*>());
-    TEST_ASSERT_EQUAL_INT(2, doc["api"].as<int>());
+    TEST_ASSERT_EQUAL_INT(3, doc["api"].as<int>());
     TEST_ASSERT_TRUE(isValidId(doc["device_id"].as<const char*>()));
     TEST_ASSERT_TRUE(isValidId(doc["course_id"].as<const char*>()));
     TEST_ASSERT_EQUAL_STRING("Beispielplatz", doc["course"].as<const char*>());

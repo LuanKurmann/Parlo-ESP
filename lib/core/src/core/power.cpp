@@ -2,6 +2,18 @@
 
 namespace golf {
 
+void ScreenPower::configure(const DeviceSettings& settings) {
+    int brightness = settings.brightness;
+    if (brightness < kMinBrightness) brightness = kMinBrightness;
+    if (brightness > kMaxBrightness) brightness = kMaxBrightness;
+    active_brightness_ = static_cast<uint8_t>(brightness);
+
+    int seconds = settings.dim_after_s;
+    if (seconds < kMinDimAfterS) seconds = kMinDimAfterS;
+    if (seconds > kMaxDimAfterS) seconds = kMaxDimAfterS;
+    dim_after_ms_ = static_cast<uint32_t>(seconds) * 1000u;
+}
+
 void ScreenPower::wake(uint32_t now_ms) {
     state_ = ScreenState::Active;
     last_input_ms_ = now_ms;
@@ -51,8 +63,8 @@ void ScreenPower::tick(uint32_t now_ms, bool keep_on) {
 
 uint8_t ScreenPower::brightness() const {
     switch (state_) {
-        case ScreenState::Active: return kBrightnessActive;
-        case ScreenState::Dim: return kBrightnessDim;
+        case ScreenState::Active: return active_brightness_;
+        case ScreenState::Dim: return active_brightness_ / 2 < kBrightnessDim ? active_brightness_ / 2 : kBrightnessDim;
         case ScreenState::Off: break;
     }
     return 0;
@@ -61,6 +73,11 @@ uint8_t ScreenPower::brightness() const {
 void dispatchButton(App& app, ScreenPower& power, int button, ButtonEvent event, uint32_t now_ms) {
     if (event == ButtonEvent::None) return;
     if (power.onInput(now_ms)) dispatchButton(app, button, event);
+}
+
+void dispatchPhysicalButton(App& app, ScreenPower& power, const DeviceSettings& settings, int physical_button,
+                            ButtonEvent event, uint32_t now_ms) {
+    dispatchButton(app, power, mappedButton(physical_button, settings), event, now_ms);
 }
 
 } // namespace golf

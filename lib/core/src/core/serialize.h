@@ -8,6 +8,7 @@
 #include "core/course.h"
 #include "core/id.h"
 #include "core/round.h"
+#include "core/settings.h"
 
 namespace golf {
 
@@ -55,5 +56,13 @@ std::string bagToJson(const Bag& bag);
 // Schlagweiten oder die ganze Liste "clubs"), bleibt in `bag`, wie es war.
 // Bei jedem Fehler bleibt `bag` unveraendert und es kommt false zurueck.
 bool bagFromJson(const std::string& json, Bag& bag);
+
+// Alle Einstellungen in einer Datei bzw. Anfrage: das Bag wie oben, dazu
+//   "brightness": 200, "dim_s": 20, "swap_buttons": false
+std::string settingsToJson(const Bag& bag, const DeviceSettings& device);
+
+// Wie bagFromJson: Was fehlt, bleibt, wie es war; bei jedem Fehler bleibt
+// alles unveraendert. Mindestens eine bekannte Angabe muss vorhanden sein.
+bool settingsFromJson(const std::string& json, Bag& bag, DeviceSettings& device);
 
 } // namespace golf

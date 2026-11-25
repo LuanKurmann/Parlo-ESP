@@ -48,8 +48,11 @@ public:
     // und es kommt false zurueck. `archived` meldet, ob eine Runde abgelegt wurde.
     bool replaceCourse(const Course& course, bool* archived = nullptr);
 
-    // Setzt und speichert die Schlagweiten.
+    // Setzt und speichert das Bag bzw. alle Einstellungen. Gelingt das
+    // Speichern nicht, bleibt alles beim Alten.
     bool setBag(const Bag& bag);
+    bool setSettings(const Bag& bag, const DeviceSettings& device);
+    const DeviceSettings& deviceSettings() const { return device_settings_; }
 
 private:
     static Course loadCourseOrEmpty(Store& store);
@@ -59,6 +62,7 @@ private:
     Store store_;
     RandomFn random_;
     App app_;
+    DeviceSettings device_settings_;
     Id round_id_ = "";
     Id previous_round_id_ = "";
     Id device_id_ = "";

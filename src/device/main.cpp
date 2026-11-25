@@ -96,8 +96,11 @@ void loop() {
         pwr_pressed = readPwrButton();
     }
     // Ist das Display aus, weckt ein Knopf es nur.
-    golf::dispatchButton(app, screen_power, 1, button1.update(digitalRead(board::kBootButton) == LOW, now), now);
-    golf::dispatchButton(app, screen_power, 2, button2.update(pwr_pressed, now), now);
+    // Helligkeit, Dimmzeit und Knopfbelegung kommen aus den Einstellungen.
+    const golf::DeviceSettings& settings = session->deviceSettings();
+    screen_power.configure(settings);
+    golf::dispatchPhysicalButton(app, screen_power, settings, 1, button1.update(digitalRead(board::kBootButton) == LOW, now), now);
+    golf::dispatchPhysicalButton(app, screen_power, settings, 2, button2.update(pwr_pressed, now), now);
 
     screen_power.tick(now, app.phoneWanted());
     if (screen_power.brightness() != shown_brightness) {

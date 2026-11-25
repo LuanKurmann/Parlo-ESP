@@ -180,7 +180,7 @@ Alles davon ist im Kern testbar, bevor die App existiert.
 |---|---|---|
 | F1 | Dauerhafte Kennung für Runden und Plätze, Änderungszähler für Plätze, Versionsnummer der Schnittstelle | ja – **erledigt** |
 | F2 | Wählbare Schlägerliste statt fester elf Schläger; Schlägerwahl am Gerät passt sich an | ja, inklusive Screenshots – **erledigt** |
-| F3 | Einstellungen erweitern (Helligkeit, Dimmzeit, Knöpfe tauschen) | ja |
+| F3 | Einstellungen erweitern (Helligkeit, Dimmzeit, Knöpfe tauschen) | ja – **erledigt** |
 | F4 | Nachrichten in Stücke zerlegen und zusammensetzen; Simulator spricht dasselbe über TCP | ja |
 | F5 | Bluetooth-Dienst auf dem Gerät, Koppeln mit Code auf dem Display | nur kompilieren |
 

@@ -130,11 +130,13 @@ bool Store::deleteArchivedRound(int number) {
     return found;
 }
 
-bool Store::saveBag(const Bag& bag) { return saveSafely(fs_, kSettingsPath, bagToJson(bag)); }
+bool Store::saveSettings(const Bag& bag, const DeviceSettings& device) {
+    return saveSafely(fs_, kSettingsPath, settingsToJson(bag, device));
+}
 
-bool Store::loadBag(Bag& bag) {
+bool Store::loadSettings(Bag& bag, DeviceSettings& device) {
     std::string json;
-    return loadSafely(fs_, kSettingsPath, json) && bagFromJson(json, bag);
+    return loadSafely(fs_, kSettingsPath, json) && settingsFromJson(json, bag, device);
 }
 
 } // namespace golf

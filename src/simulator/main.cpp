@@ -462,8 +462,10 @@ int main(int argc, char** argv) {
         const uint32_t now = SDL_GetTicks();
 
         // Wie auf dem Geraet: Ist das Display aus, weckt ein Knopf es nur.
-        golf::dispatchButton(simulator.app(), power, 1, button1.update(keys[SDL_SCANCODE_1] != 0, now), now);
-        golf::dispatchButton(simulator.app(), power, 2, button2.update(keys[SDL_SCANCODE_2] != 0, now), now);
+        const golf::DeviceSettings& settings = simulator.session->deviceSettings();
+        power.configure(settings);
+        golf::dispatchPhysicalButton(simulator.app(), power, settings, 1, button1.update(keys[SDL_SCANCODE_1] != 0, now), now);
+        golf::dispatchPhysicalButton(simulator.app(), power, settings, 2, button2.update(keys[SDL_SCANCODE_2] != 0, now), now);
         int mouse_x = 0, mouse_y = 0;
         if (SDL_GetMouseState(&mouse_x, &mouse_y) & SDL_BUTTON(SDL_BUTTON_LEFT)) power.onInput(now);
         power.tick(now, simulator.app().phoneWanted());

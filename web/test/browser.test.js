@@ -372,11 +372,59 @@ test('Runde loeschen braucht zwei Tipps', async () => {
   await page.context().close();
 });
 
+test('Display und Knoepfe einstellen', async () => {
+  const page = await newPage();
+  await page.goto(baseUrl + '/');
+  await page.click('[data-tab="device"]');
+  await page.waitForFunction(() => document.querySelector('#brightness-value').textContent !== '');
+  assert.equal(await page.inputValue('#brightness'), '200');
+  assert.equal(await page.textContent('#brightness-value'), '78 %');
+  assert.equal(await page.inputValue('#dim-after'), '20');
+  assert.equal(await page.isChecked('#swap-buttons'), false);
+
+  await page.fill('#brightness', '120');
+  assert.equal(await page.textContent('#brightness-value'), '47 %');
+  await page.selectOption('#dim-after', '60');
+  await page.check('#swap-buttons');
+  await page.click('#device-form button[type="submit"]');
+  await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Einstellungen gespeichert'));
+
+  let settings = await getJson('/api/settings');
+  assert.equal(settings.brightness, 120);
+  assert.equal(settings.dim_s, 60);
+  assert.equal(settings.swap_buttons, true);
+  assert.ok(settings.clubs.length >= 2); // das Bag wurde nicht angetastet
+
+  // Nach dem Neuladen zeigt die Seite denselben Stand.
+  await page.reload();
+  await page.click('[data-tab="device"]');
+  await page.waitForFunction(() => document.querySelector('#brightness-value').textContent === '47 %');
+  assert.equal(await page.inputValue('#dim-after'), '60');
+  assert.equal(await page.isChecked('#swap-buttons'), true);
+
+  // Ein Wert ausserhalb der Liste (z. B. von einer App gesetzt) geht beim Speichern nicht verloren.
+  await fetch(baseUrl + '/api/settings', { method: 'PUT', body: JSON.stringify({ v: 1, dim_s: 45, swap_buttons: false }) });
+  await page.reload();
+  await page.click('[data-tab="device"]');
+  await page.waitForFunction(() => document.querySelector('#dim-after').value === '45');
+  await page.click('#device-form button[type="submit"]');
+  await page.waitForFunction(() => document.querySelector('#toast').textContent.includes('Einstellungen gespeichert'));
+  settings = await getJson('/api/settings');
+  assert.equal(settings.dim_s, 45);
+
+  // Zurueck auf den Ausgangszustand fuer die uebrigen Tests.
+  await fetch(baseUrl + '/api/settings', { method: 'PUT', body: JSON.stringify({ v: 1, brightness: 200, dim_s: 20, swap_buttons: false }) });
+  await noSidewaysScroll(page);
+  await shot(page, '6-display');
+  assert.deepEqual(page.errors, []);
+  await page.context().close();
+});
+
 test('WLAN des Geraets einstellen', async () => {
   const page = await newPage();
   await page.goto(baseUrl + '/');
-  await page.waitForSelector('#device-tab-button:not([hidden])');
   await page.click('[data-tab="device"]');
+  await page.waitForSelector('#wifi-section:not([hidden])');
   assert.match(await page.textContent('#wifi-status'), /eigenes WLAN auf:\s*Golf-Tracker/);
   assert.match(await page.textContent('#wifi-saved'), /Noch kein WLAN gespeichert/);
   assert.ok(await page.isHidden('#wifi-forget'));

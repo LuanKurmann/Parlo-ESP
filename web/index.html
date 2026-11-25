@@ -17,7 +17,7 @@
     <button type="button" data-tab="rounds" aria-pressed="true">Runden</button>
     <button type="button" data-tab="course" aria-pressed="false">Platz</button>
     <button type="button" data-tab="clubs" aria-pressed="false">Schläger</button>
-    <button type="button" data-tab="device" aria-pressed="false" id="device-tab-button" hidden>Gerät</button>
+    <button type="button" data-tab="device" aria-pressed="false">Gerät</button>
   </nav>
 
   <main>
@@ -71,19 +71,39 @@
     </section>
     <!-- Geraet -->
     <section id="tab-device" hidden>
-      <h2>WLAN des Geräts</h2>
-      <div id="wifi-status" class="card"></div>
-
-      <h2>Mit einem WLAN verbinden</h2>
-      <p class="muted">Im eigenen WLAN oder im Hotspot des Handys hat das Handy gleichzeitig Internet. Das braucht es, um Plätze aus OpenStreetMap zu laden. Das Gerät verbindet sich damit, sobald du dort „Mit Handy verbinden“ wählst.</p>
-      <form id="wifi-form">
-        <label><span class="label">Name des WLANs</span>
-          <input id="wifi-ssid" type="text" autocomplete="off" autocapitalize="off" required maxlength="32"></label>
-        <label><span class="label">Passwort (leer bei offenem WLAN)</span>
-          <input id="wifi-password" type="password" autocomplete="off" minlength="8" maxlength="63"></label>
-        <button type="submit" class="primary">WLAN speichern</button>
+      <h2>Display und Knöpfe</h2>
+      <form id="device-form">
+        <label><span class="label">Helligkeit: <output id="brightness-value"></output></span>
+          <input id="brightness" type="range" min="20" max="255" step="5"></label>
+        <label><span class="label">Display dimmen nach</span>
+          <select id="dim-after">
+            <option value="10">10 Sekunden</option>
+            <option value="20">20 Sekunden</option>
+            <option value="30">30 Sekunden</option>
+            <option value="60">1 Minute</option>
+            <option value="120">2 Minuten</option>
+            <option value="300">5 Minuten</option>
+          </select></label>
+        <label class="check"><input id="swap-buttons" type="checkbox">
+          <span>Knöpfe tauschen<br><span class="muted small">Dann zählt Knopf 2 den Schlag und Knopf 1 schliesst das Loch ab. Praktisch, wenn das Gerät andersherum getragen wird.</span></span></label>
+        <button type="submit" class="primary">Speichern</button>
       </form>
-      <p><button type="button" id="wifi-forget" class="danger" hidden>Gespeichertes WLAN vergessen</button></p>
+
+      <div id="wifi-section" hidden>
+        <h2>WLAN des Geräts</h2>
+        <div id="wifi-status" class="card"></div>
+
+        <h2>Mit einem WLAN verbinden</h2>
+        <p class="muted">Im eigenen WLAN oder im Hotspot des Handys hat das Handy gleichzeitig Internet. Das braucht es, um Plätze aus OpenStreetMap zu laden. Das Gerät verbindet sich damit, sobald du dort „Mit Handy verbinden“ wählst.</p>
+        <form id="wifi-form">
+          <label><span class="label">Name des WLANs</span>
+            <input id="wifi-ssid" type="text" autocomplete="off" autocapitalize="off" required maxlength="32"></label>
+          <label><span class="label">Passwort (leer bei offenem WLAN)</span>
+            <input id="wifi-password" type="password" autocomplete="off" minlength="8" maxlength="63"></label>
+          <button type="submit" class="primary">WLAN speichern</button>
+        </form>
+        <p><button type="button" id="wifi-forget" class="danger" hidden>Gespeichertes WLAN vergessen</button></p>
+      </div>
     </section>
   </main>
 

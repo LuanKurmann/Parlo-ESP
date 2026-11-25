@@ -30,9 +30,10 @@ public:
     int findArchivedRound(const char* id);
     bool deleteArchivedRound(int number);
 
-    // Einstellungen: die Schlagweiten des Spielers.
-    bool saveBag(const Bag& bag);
-    bool loadBag(Bag& bag);
+    // Einstellungen: Bag, Display und Knoepfe in einer Datei. Beim Laden
+    // bleibt unveraendert, was in der Datei fehlt (aeltere Fassungen).
+    bool saveSettings(const Bag& bag, const DeviceSettings& device);
+    bool loadSettings(Bag& bag, DeviceSettings& device);
 
     // Kennung dieses Geraets; wird einmal erzeugt und bleibt dann gleich.
     bool saveDeviceId(const char* id);

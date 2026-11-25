@@ -5,6 +5,7 @@
 
 #include "core/app.h"
 #include "core/button.h"
+#include "core/settings.h"
 
 namespace golf {
 
@@ -34,6 +35,10 @@ public:
     explicit ScreenPower(uint32_t dim_after_ms = kDimAfterMs, uint32_t off_after_ms = kOffAfterMs)
         : dim_after_ms_(dim_after_ms), off_after_ms_(off_after_ms) {}
 
+    // Uebernimmt Helligkeit und Dimmzeit aus den Einstellungen. Gedimmt ist
+    // das Display hoechstens halb so hell wie hell.
+    void configure(const DeviceSettings& settings);
+
     // Bei jedem Knopf-Ereignis aufrufen. Liefert true, wenn die Eingabe an die
     // App weitergehen soll, und false, wenn sie nur das Display geweckt hat.
     bool onInput(uint32_t now_ms);
@@ -55,6 +60,7 @@ private:
 
     uint32_t dim_after_ms_;
     uint32_t off_after_ms_;
+    uint8_t active_brightness_ = kBrightnessActive;
     ScreenState state_ = ScreenState::Active;
     bool started_ = false;
     uint32_t last_input_ms_ = 0;
@@ -64,5 +70,10 @@ private:
 
 // Leitet ein Knopf-Ereignis an die App weiter, ausser es weckt nur das Display.
 void dispatchButton(App& app, ScreenPower& power, int button, ButtonEvent event, uint32_t now_ms);
+
+// Dasselbe fuer einen Knopf am Geraet: beruecksichtigt, ob die Knoepfe
+// getauscht sind.
+void dispatchPhysicalButton(App& app, ScreenPower& power, const DeviceSettings& settings, int physical_button,
+                            ButtonEvent event, uint32_t now_ms);
 
 } // namespace golf

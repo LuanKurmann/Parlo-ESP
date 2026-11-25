@@ -107,8 +107,9 @@ ApiResponse putCourse(Session& session, const std::string& body) {
 
 ApiResponse putSettings(Session& session, const std::string& body) {
     Bag bag = session.app().bag(); // was die Anfrage nicht nennt, bleibt
-    if (!bagFromJson(body, bag)) return error(400, "Ungueltige Einstellungen");
-    if (!session.setBag(bag)) return error(500, "Speichern fehlgeschlagen");
+    DeviceSettings device = session.deviceSettings();
+    if (!settingsFromJson(body, bag, device)) return error(400, "Ungueltige Einstellungen");
+    if (!session.setSettings(bag, device)) return error(500, "Speichern fehlgeschlagen");
     JsonDocument doc;
     doc["ok"] = true;
     return json(200, doc);
@@ -192,7 +193,7 @@ ApiResponse handleApi(Session& session, const ApiRequest& request, NetworkContro
         return method == "GET" ? roundList(session) : methodNotAllowed();
     }
     if (path == "/api/settings") {
-        if (method == "GET") return raw(bagToJson(session.app().bag()));
+        if (method == "GET") return raw(settingsToJson(session.app().bag(), session.deviceSettings()));
         if (method == "PUT") return putSettings(session, request.body);
         return methodNotAllowed();
     }

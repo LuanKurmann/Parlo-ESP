@@ -51,8 +51,11 @@ public:
         for (uint32_t elapsed = 0; elapsed < ms; elapsed += 5) {
             if (now_ms_ % 1000 == 0) emitBurst();
             // Wie in der Firmware: Ist das Display aus, weckt ein Knopf es nur.
-            golf::dispatchButton(app(), power_, 1, b1_.update(button1, now_ms_), now_ms_);
-            golf::dispatchButton(app(), power_, 2, b2_.update(button2, now_ms_), now_ms_);
+            // Helligkeit, Dimmzeit und Knopfbelegung kommen aus den Einstellungen.
+            const golf::DeviceSettings& settings = session_->deviceSettings();
+            power_.configure(settings);
+            golf::dispatchPhysicalButton(app(), power_, settings, 1, b1_.update(button1, now_ms_), now_ms_);
+            golf::dispatchPhysicalButton(app(), power_, settings, 2, b2_.update(button2, now_ms_), now_ms_);
             power_.tick(now_ms_, app().phoneWanted());
             feed_->tick(now_ms_);
             if (!session_->sync()) failed_syncs_++;
