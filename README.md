@@ -10,6 +10,7 @@ GPS, zwei Knöpfe): Distanz zum Grün, Schläge, Schlägerwahl und Scorecard.
 | `lib/core` | Kern ohne Hardware und ohne LVGL: Berechnungen, Runde, Logik. Vollständig auf dem PC testbar. |
 | `lib/ui` | Oberfläche mit LVGL. Läuft unverändert auf dem Gerät und im Simulator. |
 | `src/device` | Firmware für das Gerät: Treiber und Verdrahtung mit dem Kern. |
+| `app` | Flutter-App für Android und iOS (im Aufbau), siehe `app/README.md`. |
 | `docs` | Stand, Inbetriebnahme, Plan der App, Bluetooth-Protokoll. |
 | `src/simulator` | Einstieg des PC-Simulators (SDL2-Fenster). |
 | `test` | Unit- und Szenario-Tests für den Kern. |

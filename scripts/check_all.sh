@@ -21,5 +21,14 @@ python3 -m unittest discover -s tools
 echo "== Firmware bauen"
 pio run -e device
 
+if command -v flutter >/dev/null 2>&1; then
+  echo "== App: Formatierung, Analyse, Tests"
+  (cd app && flutter pub get >/dev/null \
+    && dart format --output=none --set-exit-if-changed lib test \
+    && flutter analyze --fatal-infos && flutter test)
+else
+  echo "== App uebersprungen: flutter nicht installiert"
+fi
+
 echo
 echo "Alles in Ordnung."

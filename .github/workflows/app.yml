@@ -1,0 +1,68 @@
+name: App
+
+on:
+  push:
+    paths:
+      - 'app/**'
+      - 'lib/core/src/core/api.h'
+      - '.github/workflows/app.yml'
+  pull_request:
+    paths:
+      - 'app/**'
+      - 'lib/core/src/core/api.h'
+      - '.github/workflows/app.yml'
+
+env:
+  FLUTTER_VERSION: '3.50.1'
+
+jobs:
+  pruefen:
+    name: Analyse, Tests, Android
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Pakete laden
+        run: flutter pub get
+      - name: Formatierung pruefen
+        run: dart format --output=none --set-exit-if-changed lib test
+      - name: Analyse
+        run: flutter analyze --fatal-infos
+      - name: Tests
+        run: flutter test
+      - name: Android bauen
+        run: flutter build apk --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: parlo-android-debug
+          path: app/build/app/outputs/flutter-apk/app-debug.apk
+          retention-days: 14
+
+  ios:
+    name: iOS bauen (ohne Signatur)
+    runs-on: macos-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+      - name: Pakete laden
+        run: flutter pub get
+      - name: iOS bauen
+        run: flutter build ios --release --no-codesign

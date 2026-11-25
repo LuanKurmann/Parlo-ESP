@@ -1,6 +1,6 @@
 # Plan: Flutter-App zum Golf-Tracker
 
-Stand: Planung, noch kein Code. Grundlage sind die Antworten vom
+Stand: Schritte 1 bis 5 erledigt, das Gerüst der App liegt in `app/`. Grundlage sind die Antworten vom
 24. November 2026:
 
 | Frage | Entscheid |
@@ -213,7 +213,7 @@ Reihenfolge so, dass möglichst lange ohne Board gearbeitet werden kann.
 
 **App**
 
-5. Projektgerüst in `app/`, GitHub Actions (Analyse, Tests, Android-Build, iOS-Build ohne Signatur).
+5. Projektgerüst in `app/`, GitHub Actions (Analyse, Tests, Android-Build, iOS-Build ohne Signatur). **Erledigt:** vier Bereiche mit leerem Zustand, Flutter 3.50.1, Ablauf `.github/workflows/app.yml`.
 6. Datenmodell und lokale Datenbank, Export und Import.
 7. Geräte-Client und Abgleich, getestet gegen den Simulator.
 8. Runden: Liste, Detail, Verlauf und Schlägerstatistik.
@@ -235,9 +235,8 @@ Reihenfolge so, dass möglichst lange ohne Board gearbeitet werden kann.
   eine kostenlose Stufe). Das ist vor Schritt 9 zu entscheiden.
 - **iOS:** Ohne Mac und Entwicklerkonto bleibt iOS auf „kompiliert in GitHub
   Actions“ beschränkt.
-- **Entwicklungsumgebung:** Flutter ist in der jetzigen Cloud-Umgebung nicht
-  installiert; die nötigen Download-Server müssen freigegeben werden. Das kläre
-  ich zu Beginn von Schritt 5.
+- **Android-Build:** läuft nur in GitHub Actions; in der Cloud-Umgebung fehlt
+  das Android-SDK. Analyse und Tests laufen auch dort.
 - **Bluetooth und WLAN gleichzeitig** kosten auf dem ESP32 Speicher und Strom.
   Ob beides parallel sinnvoll ist, zeigt sich am Board.
 - **Firmware-Aktualisierung über die App** wäre praktisch, ist aber nicht Teil

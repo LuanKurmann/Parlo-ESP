@@ -1,0 +1,20 @@
+{
+  "@@locale": "de",
+  "appTitle": "Parlo",
+  "tabRounds": "Runden",
+  "tabCourses": "Plätze",
+  "tabDevice": "Gerät",
+  "tabSettings": "Einstellungen",
+  "roundsEmptyTitle": "Noch keine Runden",
+  "roundsEmptyText": "Nach dem ersten Abgleich mit dem Gerät erscheinen die gespielten Runden hier.",
+  "coursesEmptyTitle": "Noch keine Plätze",
+  "coursesEmptyText": "Hier entsteht die Platz-Bibliothek: Plätze suchen, speichern und auf das Gerät laden.",
+  "deviceEmptyTitle": "Kein Gerät verbunden",
+  "deviceEmptyText": "Hier wird der Golf-Tracker gekoppelt und abgeglichen.",
+  "settingsEmptyTitle": "Einstellungen",
+  "settingsEmptyText": "Schlägerauswahl, Schlagweiten und Anzeige des Geräts folgen hier.",
+  "aboutVersion": "Version {version}",
+  "@aboutVersion": {
+    "placeholders": { "version": { "type": "String" } }
+  }
+}
